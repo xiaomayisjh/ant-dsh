@@ -163,6 +163,9 @@ export const TRANSLATION_SCOPE_GLOB_EXCLUDES = [
   'python/sdk-runtime/src/deepseek_harness_runtime/runtime/dsh-jsonrpc-agent-*/**',
   'python/sdk-runtime/src/deepseek_harness_runtime/runtime/node/**',
   'vendor/**',
+  // Bundled third-party skill packs ship their own single-language resource
+  // Markdown; it is package payload, not maintained repository documentation.
+  'packages/bundle/ant-sword-harness/skills/**',
 ]
 
 /** Whether a repository-relative path belongs to a dependency or generated tree. */

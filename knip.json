@@ -782,6 +782,14 @@
       "ignoreDependencies": [
         "@deepseek-ai/.+"
       ]
+    },
+    "packages/bundle/ant-sword-harness": {
+      "ignoreDependencies": [
+        "@deepseek-ai/.+",
+        "@nanmicoder/dsh-agent-teams",
+        "dshmarket",
+        "zod"
+      ]
     }
   }
 }

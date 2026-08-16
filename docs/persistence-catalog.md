@@ -235,6 +235,19 @@ Types: [TokenUsage](subsystems/llm-streaming.md)
 
 Source: [`packages/core/session/src/types.ts:273`](../packages/core/session/src/types.ts)
 
+### `board/*`
+
+<a id="boardchange--log-only"></a>
+
+#### `board/change` — log-only
+
+```ts persistence-catalog
+/** A blackboard mutation: a node added, or an Intent's lifecycle transition. */
+'board/change': BoardChangeMeta
+```
+
+Source: [`packages/bundle/ant-sword-harness/src/auto/domain.ts:24`](../packages/bundle/ant-sword-harness/src/auto/domain.ts)
+
 ### `command/*`
 
 <a id="commanddone--log-only"></a>

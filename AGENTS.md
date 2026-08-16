@@ -1,3 +1,8 @@
+---
+description: 
+alwaysApply: true
+---
+
 # AGENTS.md
 
 DeepSeek Harness is a plugin-based agent harness on vendored Cordis: **everything is a plugin**. Read [docs/architecture.md](docs/architecture.md) before changing `packages/`; follow [docs/AGENTS.md](docs/AGENTS.md) for documentation.
@@ -143,6 +148,10 @@ Docs accompany every code change: update affected README and JSDoc contracts tog
 ## Editing these instructions
 
 `CLAUDE.md` symlinks `AGENTS.md` at root, `packages/`, and `examples/`; edit the real file. Keep each rule self-contained while linking high-level docs. Condense when clarity survives; raise a `verify-doc-budgets` ceiling when the required content genuinely needs more space.
+
+## Fork maintenance
+
+This checkout is the fork `xiaomayisjh/ant-dsh`, tracking upstream `deepseek-ai/deepseek-harness`. `master` fast-forwards upstream only; every local change lands on `dev`. Run `sync-upstream.bat` / `.ps1` / `.sh` to sync upstream and merge it into `dev`; branch rules, conflict resolution, and the source-run flow live in [FORKING.md](FORKING.md). `FORKING.md` and the sync scripts are fork-maintenance files: they stay out of the `docs/` bilingual-pair and Agent Note gates, and a `master` merge must not carry them.
 
 ## Vendoring policy
 

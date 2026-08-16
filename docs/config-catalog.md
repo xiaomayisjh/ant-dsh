@@ -318,6 +318,53 @@ Depends on: [`ToolPresentationMode`](subsystems/tools.md)
 
 Source: [`packages/core/agent-tool-presentation/src/index.ts:38`](../packages/core/agent-tool-presentation/src/index.ts)
 
+<a id="deepseek-aidsh-ant-sword-harness"></a>
+
+## `@deepseek-ai/dsh-ant-sword-harness`
+
+Requires: `skills` · `sessions` · `storageDomain` · `commands`
+
+```ts config-catalog
+/** Plugin config: the rewind capability is configured under `rewind`. */
+export interface Config {
+  /** Rewind configuration; omitted mounts rewind with its defaults. */
+  rewind?: RewindPluginConfig
+  /** Sync the bundled red-team preset into the user preset root. Default true. */
+  syncRedTeamPreset?: boolean
+}
+
+/** Rewind configuration; all keys optional, defaults applied at mount time. */
+export type RewindPluginConfig = RewindConfig
+
+/** Plugin configuration. Every field is optional; defaults are documented per key. */
+export interface RewindConfig {
+  /** Master switch; `false` removes command and listeners. Default true. */
+  readonly enabled?: boolean
+  /** Snapshot provider: `auto` (git if usable, else copy), `git`, or `copy`. Default `auto`. */
+  readonly provider?: 'auto' | 'git' | 'copy'
+  /** Git executable. Default `git`. */
+  readonly gitBin?: string
+  /** Root for copy-provider snapshots. Default `<home>/.dsh/ant-sword-rewind`. */
+  readonly snapshotDir?: string
+  /** Checkpoints kept per session (oldest pruned first). Default 50. */
+  readonly maxSnapshots?: number
+  /** Global incremental-byte soft quota. Default 512 MiB. */
+  readonly maxSnapshotBytes?: number
+  /** Prune when a turn ends. Default true. */
+  readonly pruneOnTurnEnd?: boolean
+  /** Tool names treated as mutating at `tools/pre-execute`. */
+  readonly mutationTools?: string[]
+  /** Glob-ish segments the copy provider skips. */
+  readonly excludeGlobs?: string[]
+  /** Checkpoints listed by a bare `/rewind`. Default 10. */
+  readonly listLimit?: number
+  /** Pre-rewind guard checkpoint: `warn` | `require` | `off`. Default `warn`. */
+  readonly preRewindCheckpoint?: 'warn' | 'require' | 'off'
+}
+```
+
+Source: [`packages/bundle/ant-sword-harness/src/index.ts:25`](../packages/bundle/ant-sword-harness/src/index.ts)
+
 <a id="deepseek-aidsh-attachment-local"></a>
 
 ## `@deepseek-ai/dsh-attachment-local`

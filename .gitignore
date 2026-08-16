@@ -38,3 +38,6 @@ apps/web/dist/
 worktrees/
 .agents/worktrees/
 .typert-*/
+# reverse-skill runtime engagement state (case-init / master-route artifacts)
+packages/bundle/ant-sword-harness/work/
+/work/

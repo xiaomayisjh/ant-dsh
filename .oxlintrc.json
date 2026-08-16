@@ -24,6 +24,10 @@
     "website/.generated/**",
     "vendor/**", // Vendored source keeps upstream style and idioms.
     "native/**", // The imported landlock-run subtree has its own gates; see native/README.md.
+    // Bundled skill-pack content is vendored research material: the reverse-master
+    // tool sources and skill reference docs keep upstream style and are loaded as
+    // data/text at runtime, never compiled into the harness program.
+    "packages/bundle/ant-sword-harness/skills/**",
     "**/*.js",
     "**/*.mjs",
     "**/*.config.ts", // Tool and app configs are outside the repository TypeScript programs.

@@ -53,9 +53,10 @@ export function apply(ctx: Context): void {
         return null
       }
       return {
+        isAutoMode: ctx.sessions.list.getSnapshot().byId[sessionId]?.agentPreset === 'red-team-auto',
         onPause: () => run('/auto pause'),
         onResume: () => run('/auto resume'),
-        onHint: (text) => run(`/auto hint ${text}`),
+        onHint: text => run(`/auto hint ${text}`),
       }
     },
   }, AutoGraphView))

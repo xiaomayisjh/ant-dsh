@@ -18,6 +18,8 @@ import css from './AutoGraphView.module.css'
 
 /** Operator verbs the panel's control bar invokes (injected by the plugin). */
 export interface AutoGraphActions {
+  /** Whether the session was composed from the autonomous red-team preset. */
+  isAutoMode: boolean
   /** Pause the loop after the current step. */
   onPause: () => Promise<string | null>
   /** Resume a paused loop. */
@@ -64,17 +66,22 @@ function toFlow(board: BoardSnapshot): { nodes: Node[]; edges: Edge[] } {
   return { nodes, edges }
 }
 
-export function AutoGraphView({ onPause, onResume, onHint, useProjection, t }: ConvViewProps & AutoGraphActions & PropsLocale<'autograph'>) {
+const EMPTY_BOARD: BoardSnapshot = {
+  nodes: [],
+  cycle: 0,
+  paused: false,
+  complete: false,
+}
+
+export function AutoGraphView({ isAutoMode, onPause, onResume, onHint, useProjection, t }: ConvViewProps & AutoGraphActions & PropsLocale<'autograph'>) {
   const [hint, setHint] = useState('')
   const [pending, setPending] = useState(false)
-  const board = useProjection('board') as BoardSnapshot | null | undefined
+  const projectedBoard = useProjection('board') as BoardSnapshot | null | undefined
+  const board = projectedBoard ?? EMPTY_BOARD
 
-  const { nodes, edges } = useMemo(
-    () => (board == null ? { nodes: [], edges: [] } : toFlow(board)),
-    [board],
-  )
+  const { nodes, edges } = useMemo(() => toFlow(board), [board])
 
-  if (board == null) return null
+  if (!isAutoMode) return null
 
   const status = board.complete ? t('panel.complete') : board.paused ? t('panel.paused') : t('panel.running')
 
@@ -109,8 +116,8 @@ export function AutoGraphView({ onPause, onResume, onHint, useProjection, t }: C
           type="text"
           value={hint}
           placeholder={t('control.hintPlaceholder')}
-          onChange={e => { setHint(e.target.value) }}
-          onKeyDown={e => {
+          onChange={(e) => { setHint(e.target.value) }}
+          onKeyDown={(e) => {
             if (e.key === 'Enter' && hint.trim().length > 0) {
               void run(() => onHint(hint.trim()))
               setHint('')

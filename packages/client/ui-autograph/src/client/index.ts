@@ -7,14 +7,18 @@
  * the empty state when the session has no blackboard.
  */
 import type { Context } from '@deepseek-ai/cordis'
+import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 // Type-only: the 'conversation.view' SlotMap row, declared by the owning package.
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+// Type-only: the settings shell's SlotMap merge.
+import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 // Type-only: pulls the generated command Remote (ctx.remote.commands).
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import { AutoGraphView, type AutoGraphActions } from './AutoGraphView.tsx'
+import { INITIAL_RUNTIME_STATUS, RuntimeStatus, type RedTeamRuntimeStatus } from './RuntimeStatus.tsx'
 import { en, zh, type AutographKey } from './locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -39,6 +43,35 @@ export const inject = ['slots', 'sessions', 'remote', 'remote.commands', 'locale
 export function apply(ctx: Context): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-autograph: dictionaries')
   const t = ctx.locale.bind(NS)
+  const runtimeStatus = createSnapshotStore<RedTeamRuntimeStatus>(INITIAL_RUNTIME_STATUS)
+
+  const refreshRuntimeStatus = async (): Promise<void> => {
+    const response = await fetch('/ant-sword/runtime-status', { cache: 'no-store' })
+    if (!response.ok) throw new Error(`runtime status request failed: ${response.status}`)
+    runtimeStatus.set(await response.json() as RedTeamRuntimeStatus)
+  }
+  ctx.effect(() => {
+    let disposed = false
+    const refresh = (): void => {
+      void refreshRuntimeStatus().catch((error) => {
+        if (!disposed) ctx.logger.warn(error)
+      })
+    }
+    refresh()
+    const timer = setInterval(refresh, 5_000)
+    return () => {
+      disposed = true
+      clearInterval(timer)
+    }
+  }, 'ui-autograph: runtime status polling')
+
+  ctx.slots.inject('settings.section', () => ctx.slots.register({
+    name: 'settings.section',
+    id: 'red-team-runtime',
+    order: 18,
+    label: () => 'Red Team 环境',
+    inject: () => ({ runtimeStatus }),
+  }, RuntimeStatus))
 
   ctx.slots.inject('conversation.view', () => ctx.slots.register({
     name: 'conversation.view',
@@ -54,6 +87,7 @@ export function apply(ctx: Context): void {
       }
       return {
         isAutoMode: ctx.sessions.list.getSnapshot().byId[sessionId]?.agentPreset === 'red-team-auto',
+        runtimeStatus,
         onPause: () => run('/auto pause'),
         onResume: () => run('/auto resume'),
         onHint: text => run(`/auto hint ${text}`),

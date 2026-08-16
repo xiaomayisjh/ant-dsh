@@ -52,6 +52,9 @@
     },
     {
       "path": "../../util/home-paths"
+    },
+    {
+      "path": "../../host/webserver"
     }
   ]
 }

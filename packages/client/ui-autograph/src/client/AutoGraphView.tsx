@@ -12,12 +12,17 @@ import { useMemo, useState } from 'react'
 import { ReactFlow, Background, Controls } from '@xyflow/react'
 import type { Edge, Node } from '@xyflow/react'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
+import type { SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ConvViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { RedTeamRuntimeStatus } from './RuntimeStatus.tsx'
+import { RuntimeStatus } from './RuntimeStatus.tsx'
 import type { BoardNode, BoardNodeKind, BoardSnapshot } from './board.ts'
 import css from './AutoGraphView.module.css'
 
 /** Operator verbs the panel's control bar invokes (injected by the plugin). */
 export interface AutoGraphActions {
+  /** Shared deployment-level Skill/MCP status source. */
+  runtimeStatus: SnapshotStore<RedTeamRuntimeStatus>
   /** Whether the session was composed from the autonomous red-team preset. */
   isAutoMode: boolean
   /** Pause the loop after the current step. */
@@ -73,7 +78,7 @@ const EMPTY_BOARD: BoardSnapshot = {
   complete: false,
 }
 
-export function AutoGraphView({ isAutoMode, onPause, onResume, onHint, useProjection, t }: ConvViewProps & AutoGraphActions & PropsLocale<'autograph'>) {
+export function AutoGraphView({ isAutoMode, runtimeStatus, onPause, onResume, onHint, useProjection, t }: ConvViewProps & AutoGraphActions & PropsLocale<'autograph'>) {
   const [hint, setHint] = useState('')
   const [pending, setPending] = useState(false)
   const projectedBoard = useProjection('board') as BoardSnapshot | null | undefined
@@ -98,6 +103,7 @@ export function AutoGraphView({ isAutoMode, onPause, onResume, onHint, useProjec
         <span className={css.meta}>{t('panel.cycle', { cycle: board.cycle })}</span>
         <span className={css.status} data-paused={board.paused} data-complete={board.complete}>{status}</span>
       </div>
+      <RuntimeStatus runtimeStatus={runtimeStatus} compact />
       <div className={css.canvas}>
         {nodes.length === 0
           ? <div className={css.empty}>{t('panel.empty')}</div>

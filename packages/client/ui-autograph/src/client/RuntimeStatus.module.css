@@ -1,0 +1,123 @@
+.rail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--dsh-border, #21262d);
+  background: color-mix(in srgb, var(--dsh-bg-soft, #161b22) 88%, transparent);
+  font-size: 11px;
+}
+
+.metric {
+  color: var(--dsh-fg-muted, #8b949e);
+}
+
+.metric strong {
+  color: var(--dsh-fg, #e6edf3);
+}
+
+.warning {
+  margin-left: auto;
+  color: #d97706;
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--dsh-fg, #e6edf3);
+}
+
+.settingsHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.settingsHeader h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.settingsHeader p,
+.card p {
+  margin: 0;
+  color: var(--dsh-fg-muted, #8b949e);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.summary {
+  display: flex;
+  gap: 8px;
+}
+
+.summary span,
+.cardTitle span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--dsh-bg-soft, #161b22);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.skillCard,
+.card {
+  padding: 12px;
+  border: 1px solid var(--dsh-border, #30363d);
+  border-radius: 8px;
+  background: var(--dsh-bg-soft, #11161d);
+}
+
+.skillCard {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.skillCard small {
+  color: var(--dsh-fg-muted, #8b949e);
+  text-align: right;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.card[data-state='missing'] {
+  border-color: #6e5314;
+}
+
+.card[data-state='available'],
+.card[data-state='configured'] {
+  border-color: #1f6f3d;
+}
+
+.cardTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card code,
+.card pre {
+  overflow-x: auto;
+  margin: 0;
+  padding: 7px;
+  border-radius: 5px;
+  background: var(--dsh-bg, #0b0f14);
+  color: var(--dsh-fg, #e6edf3);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

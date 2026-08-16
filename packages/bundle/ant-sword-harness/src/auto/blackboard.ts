@@ -14,7 +14,7 @@ import { randomBytes } from 'node:crypto'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
-import type { Domain } from '@deepseek-ai/dsh-storage-domain'
+import type { Domain, DomainFacility } from '@deepseek-ai/dsh-storage-domain'
 import { blackboardDomain } from './domain.ts'
 import type { BoardNode, BoardNodeKind, BoardSnapshot, IntentStatus } from './types.ts'
 
@@ -59,9 +59,15 @@ export class BlackboardService extends Service {
   private readonly paused = new Map<string, boolean>()
   private readonly complete = new Map<string, boolean>()
 
-  constructor(ctx: Context) {
+  /**
+   * @param ctx - plugin context.
+   * @param facility - optional explicit DomainFacility (tests); defaults to
+   * the injected `ctx.storageDomain` service.
+   */
+  constructor(ctx: Context, facility?: DomainFacility) {
     super(ctx, 'blackboard')
-    this.domainReady = ctx.storageDomain.open(blackboardDomain)
+    const source = facility ?? ctx.storageDomain
+    this.domainReady = source.open(blackboardDomain)
     void this.domainReady.catch(() => undefined)
     ctx.effect(async () => {
       const domain = await this.domainReady.catch(() => undefined)

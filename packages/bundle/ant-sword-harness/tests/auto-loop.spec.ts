@@ -6,10 +6,7 @@
  * backend; the session is a minimal stand-in carrying id + append.
  */
 
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 import Storage from '@deepseek-ai/dsh-storage'
@@ -18,11 +15,9 @@ import { MemoryStorageBackend } from '../../../storage/storage-domain/tests/help
 import { BlackboardService, applyBoardProjection } from '../src/auto/blackboard.ts'
 import type { BoardNode, BoardSnapshot } from '../src/auto/types.ts'
 
-const dirs: string[] = []
-
-afterEach(async () => {
-  await Promise.all(dirs.splice(0).map(dir => rm(dir, { recursive: true, force: true })))
-})
+// The board/change declaration merge lives in the auto domain module; importing
+// it (transitively, via blackboard) widens Session.append's accepted types here.
+import type {} from '../src/auto/domain.ts'
 
 /** A minimal Session stand-in: id + an append that records events. */
 function fakeSession(id: string, events: SessionEvent[] = []): Session {
@@ -40,9 +35,10 @@ async function harness() {
   const ctx = new Context()
   await ctx.plugin(Storage)
   ctx.storage.backend.register('memory', new MemoryStorageBackend())
-  ctx.storage.mount('domain', new DomainFacility(ctx, { backend: 'memory', routes: {} }))
-  await ctx.plugin(BlackboardService)
-  return { ctx, board: ctx.blackboard }
+  const facility = new DomainFacility(ctx, { backend: 'memory', routes: {} })
+  ctx.storage.mount('domain', facility)
+  const board = new BlackboardService(ctx, facility)
+  return { ctx, board }
 }
 
 describe('blackboard service', () => {

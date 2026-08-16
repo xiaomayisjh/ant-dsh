@@ -50,7 +50,9 @@
     "release:github": "node scripts/release-github.mjs"
   },
   "dependencies": {
+    "@deepseek-ai/dsh-client-ui-autograph": "workspace:^",
     "@deepseek-ai/dsh-home-paths": "workspace:^",
+    "@deepseek-ai/dsh-mcp-client": "workspace:*",
     "@deepseek-ai/dsh-session-projection": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:^",
     "@nanmicoder/dsh-agent-teams": "^0.1.4",

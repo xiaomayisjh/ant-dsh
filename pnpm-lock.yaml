@@ -980,9 +980,15 @@ importers:
 
   packages/bundle/ant-sword-harness:
     dependencies:
+      '@deepseek-ai/dsh-client-ui-autograph':
+        specifier: workspace:^
+        version: link:../../client/ui-autograph
       '@deepseek-ai/dsh-home-paths':
         specifier: workspace:^
         version: link:../../util/home-paths
+      '@deepseek-ai/dsh-mcp-client':
+        specifier: workspace:*
+        version: link:../../mcp/mcp-client
       '@deepseek-ai/dsh-session-projection':
         specifier: workspace:*
         version: link:../../session/session-projection
@@ -1337,9 +1343,6 @@ importers:
       '@deepseek-ai/dsh-client-ui-agent-preset':
         specifier: workspace:^
         version: link:../../client/ui-agent-preset
-      '@deepseek-ai/dsh-client-ui-autograph':
-        specifier: workspace:^
-        version: link:../../client/ui-autograph
       '@deepseek-ai/dsh-client-ui-commands':
         specifier: workspace:^
         version: link:../../client/ui-commands

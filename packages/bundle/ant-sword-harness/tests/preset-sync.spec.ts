@@ -52,9 +52,9 @@ describe('syncRedTeamPreset', () => {
 
     const composition = await readFile(join(target, 'agent.cordis.yml'), 'utf8')
     expect(composition).toContain('AUTONOMOUS red-team operator')
-    expect(composition).toContain('@deepseek-ai/dsh-mcp-client')
-    expect(composition).toContain('serverName: kali')
-    expect(composition).toContain('serverName: ghidra')
+    // MCP servers are mounted programmatically from bundle config, not preset rows.
+    expect(composition).toContain('mcpServers')
+    expect(composition).not.toContain('serverName: kali')
     // No plan-mode gate: the autonomous loop must not be gated.
     expect(composition).not.toContain('dsh-plan-mode')
 

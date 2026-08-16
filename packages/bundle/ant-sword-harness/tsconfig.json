@@ -39,6 +39,9 @@
       "path": "../../llm/llm"
     },
     {
+      "path": "../../mcp/mcp-client"
+    },
+    {
       "path": "../../session/session-projection"
     },
     {

@@ -211,71 +211,10 @@
     searchTimeoutMs: 60000
 
 # ── embedded offensive-security MCP servers ─────────────────────────────────
-# Eight servers bridged via dsh-mcp-client; tools reach the model as
-# mcp__<server>__<tool>. A server that is absent fails soft (failOnStartupError
-# defaults to false) — the loop notes the gap and continues. stdio servers
-# spawn their command; http servers connect to a running instance.
-
-- id: mcp-kali
-  name: '@deepseek-ai/dsh-mcp-client'
-  config:
-    serverName: kali
-    transport: stdio
-    command: kali-server-mcp
-    args: ['--port', '5000']
-
-- id: mcp-metasploit
-  name: '@deepseek-ai/dsh-mcp-client'
-  config:
-    serverName: metasploit
-    transport: stdio
-    command: metasploitmcp
-    args: ['--transport', 'stdio']
-
-- id: mcp-hexstrike
-  name: '@deepseek-ai/dsh-mcp-client'
-  config:
-    serverName: hexstrike
-    transport: stdio
-    command: hexstrike-ai
-
-- id: mcp-pentestswarm
-  name: '@deepseek-ai/dsh-mcp-client'
-  config:
-    serverName: pentestswarm
-    transport: stdio
-    command: pentestswarm
-    args: ['mcp', 'serve']
-    env:
-      PENTESTSWARM_ORCHESTRATOR_API_KEY: !!js process.env.PENTESTSWARM_ORCHESTRATOR_API_KEY
-
-- id: mcp-jshook
-  name: '@deepseek-ai/dsh-mcp-client'
-  config:
-    serverName: jshook
-    transport: stdio
-    command: npx
-    args: ['-y', '@jshookmcp/jshook@latest']
-    env:
-      JSHOOK_BASE_PROFILE: search
-
-- id: mcp-anything-analyzer
-  name: '@deepseek-ai/dsh-mcp-client'
-  config:
-    serverName: anything
-    transport: streamable-http
-    url: http://localhost:23816/mcp
-
-- id: mcp-idapro
-  name: '@deepseek-ai/dsh-mcp-client'
-  config:
-    serverName: idapro
-    transport: streamable-http
-    url: http://127.0.0.1:13337/mcp
-
-- id: mcp-ghidra
-  name: '@deepseek-ai/dsh-mcp-client'
-  config:
-    serverName: ghidra
-    transport: streamable-http
-    url: http://localhost:8765/mcp
+# The eight Kali/reverse MCP servers (kali, metasploit, hexstrike, pentestswarm,
+# jshook, anything-analyzer, idapro, ghidra) are NOT declared here. They are
+# mounted programmatically by the bundle's `ant-sword-harness` plugin from its
+# `mcpServers` config — every server's transport/command/env/url/credentials is
+# editable in the dsh plugin-config UI, and the pentestswarm orchestrator key
+# lives in the bundle's `pentestswarmApiKey` secret field (never an env var).
+# Tools reach the model as mcp__<server>__<tool>; an absent server fails soft.

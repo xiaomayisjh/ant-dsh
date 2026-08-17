@@ -121,3 +121,160 @@
   white-space: pre-wrap;
   word-break: break-all;
 }
+
+.installToolbar,
+.installActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.installToolbar label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--dsh-fg-muted, #8b949e);
+  font-size: 12px;
+}
+
+.installToolbar select,
+.installActions button {
+  border: 1px solid var(--dsh-border, #30363d);
+  border-radius: 6px;
+  background: var(--dsh-bg-soft, #161b22);
+  color: var(--dsh-fg, #e6edf3);
+  padding: 6px 9px;
+}
+
+.installActions button:focus-visible,
+.installToolbar select:focus-visible {
+  outline: 2px solid var(--dsh-focus, #2f81f7);
+  outline-offset: 2px;
+}
+
+.installActions button:disabled {
+  opacity: 0.5;
+}
+
+.installError {
+  color: var(--dsh-danger, #f85149);
+  font-size: 12px;
+}
+
+.installProgress {
+  display: grid;
+  flex: 1 1 100%;
+  gap: 4px;
+  color: var(--dsh-fg-muted, #8b949e);
+  font-size: 11px;
+}
+
+.installProgress progress {
+  width: 100%;
+  accent-color: var(--dsh-accent, #2f81f7);
+}
+
+.configEditor {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dsh-border, #30363d);
+}
+
+.tabs,
+.editorActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tabs button,
+.editorActions button,
+.editorList fieldset > button {
+  border: 1px solid var(--dsh-border, #30363d);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: var(--dsh-bg-soft, #161b22);
+  color: var(--dsh-fg, #e6edf3);
+}
+
+.tabs button[data-active='true'] {
+  border-color: var(--dsh-accent, #2f81f7);
+  color: var(--dsh-accent, #2f81f7);
+}
+
+.editorList {
+  display: grid;
+  gap: 10px;
+}
+
+.editorList fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid var(--dsh-border, #30363d);
+  border-radius: 8px;
+}
+
+.editorList label {
+  display: grid;
+  gap: 5px;
+  color: var(--dsh-fg-muted, #8b949e);
+  font-size: 11px;
+}
+
+.editorList input,
+.editorList select,
+.editorList textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--dsh-border, #30363d);
+  border-radius: 6px;
+  padding: 7px;
+  background: var(--dsh-bg, #0b0f14);
+  color: var(--dsh-fg, #e6edf3);
+}
+
+.editorList textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.keyValues {
+  display: grid;
+  gap: 5px;
+}
+
+.keyValues > div {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(100px, 2fr) auto;
+  gap: 5px;
+}
+
+.keyValues button {
+  border: 1px solid var(--dsh-border, #30363d);
+  border-radius: 5px;
+  background: var(--dsh-bg-soft, #161b22);
+  color: var(--dsh-fg, #e6edf3);
+}
+
+.editorList :is(input, select, textarea, button):focus-visible,
+.tabs button:focus-visible {
+  outline: 2px solid var(--dsh-focus, #2f81f7);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .settingsHeader,
+  .skillCard {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .skillCard small {
+    text-align: left;
+  }
+}

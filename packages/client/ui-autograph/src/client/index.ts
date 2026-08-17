@@ -19,6 +19,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import { AutoGraphView, type AutoGraphActions } from './AutoGraphView.tsx'
 import { INITIAL_RUNTIME_STATUS, RuntimeStatus, type RedTeamRuntimeStatus } from './RuntimeStatus.tsx'
+import type { RuntimeConfigValue } from './RuntimeConfigEditor.tsx'
 import { en, zh, type AutographKey } from './locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -32,7 +33,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 const NS = 'autograph'
 
 /** Required services: view slot, sessions binding, command Remote, locale. */
-export const inject = ['slots', 'sessions', 'remote', 'remote.commands', 'locale']
+export const inject = ['slots', 'sessions', 'remote', 'remote.commands', 'locale', 'settingsScope', 'connection']
 
 /**
  * Client plugin body: register the autonomous graph view tab. The
@@ -44,6 +45,7 @@ export function apply(ctx: Context): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-autograph: dictionaries')
   const t = ctx.locale.bind(NS)
   const runtimeStatus = createSnapshotStore<RedTeamRuntimeStatus>(INITIAL_RUNTIME_STATUS)
+  const configScope = ctx.settingsScope.bind<RuntimeConfigValue>({ namespace: 'ant-sword-runtime' })
 
   const refreshRuntimeStatus = async (): Promise<void> => {
     const response = await fetch('/ant-sword/runtime-status', { cache: 'no-store' })
@@ -70,7 +72,7 @@ export function apply(ctx: Context): void {
     id: 'red-team-runtime',
     order: 18,
     label: () => 'Red Team 环境',
-    inject: () => ({ runtimeStatus }),
+    inject: () => ({ runtimeStatus, configScope }),
   }, RuntimeStatus))
 
   ctx.slots.inject('conversation.view', () => ctx.slots.register({

@@ -54,6 +54,15 @@
       "path": "../../util/home-paths"
     },
     {
+      "path": "../../settings/settings"
+    },
+    {
+      "path": "../../subprocess/subprocess"
+    },
+    {
+      "path": "../../core/system-prompt"
+    },
+    {
       "path": "../../host/webserver"
     }
   ]

@@ -35,20 +35,20 @@ MCP 客户端桥接插件：连接外部 [Model Context Protocol](https://modelc
 
 | 字段 | 传输 | 必填 | 描述 |
 |---|---|---|---|
-| `transport` | 两者 | 是 | `"stdio"` 或 `"streamable-http"` |
-| `serverName` | 两者 | 是 | 该服务器面向模型工具名称的 namespace；`[A-Za-z0-9_-]{1,32}`，在存活实例中唯一 |
+| `transport` | 全部 | 是 | `"stdio"`、旧版 `"sse"` 或 `"streamable-http"` |
+| `serverName` | 全部 | 是 | 该服务器面向模型工具名称的 namespace；`[A-Za-z0-9_-]{1,32}`，在存活实例中唯一 |
 | `command` | stdio | 是 | 要 spawn 的可执行文件 |
 | `args` | stdio | 否 | 传给命令的参数 |
 | `env` | stdio | 否 | 合并到已清理环境中的额外环境变量 |
 | `cwd` | stdio | 否 | 子进程工作目录 |
 | `url` | http | 是 | MCP 服务器 URL |
 | `headers` | http | 否 | 额外标头（例如认证 token） |
-| `toolCallTimeoutMs` | 两者 | 否 | 每次 `callTool` 调用的超时（默认 60000） |
-| `failOnStartupError` | 两者 | 否 | 初始连接或工具同步失败时拒绝插件激活（默认 `false`） |
-| `reconnect.enabled` | 两者 | 否 | 连接丢失后自动重新连接（默认 `true`） |
-| `reconnect.initialDelayMs` | 两者 | 否 | 首次重连延迟（毫秒）；每次连续失败尝试翻倍（默认 500） |
-| `reconnect.maxDelayMs` | 两者 | 否 | 退避上限（毫秒）；同时也是重置尝试预算所需的正常运行时长（默认 30000） |
-| `reconnect.maxAttempts` | 两者 | 否 | 每次中断期间连续失败尝试次数上限，超出后彻底放弃（默认 10） |
+| `toolCallTimeoutMs` | 全部 | 否 | 每次 `callTool` 调用的超时（默认 60000） |
+| `failOnStartupError` | 全部 | 否 | 初始连接或工具同步失败时拒绝插件激活（默认 `false`） |
+| `reconnect.enabled` | 全部 | 否 | 连接丢失后自动重新连接（默认 `true`） |
+| `reconnect.initialDelayMs` | 全部 | 否 | 首次重连延迟（毫秒）；每次连续失败尝试翻倍（默认 500） |
+| `reconnect.maxDelayMs` | 全部 | 否 | 退避上限（毫秒）；同时也是重置尝试预算所需的正常运行时长（默认 30000） |
+| `reconnect.maxAttempts` | 全部 | 否 | 每次中断期间连续失败尝试次数上限，超出后彻底放弃（默认 10） |
 
 ## 工具命名
 

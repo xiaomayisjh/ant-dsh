@@ -10,7 +10,7 @@ export type RuntimeAvailability = 'available' | 'missing' | 'configured' | 'disa
 
 export interface McpRuntimeStatus {
   readonly serverName: string
-  readonly transport: 'stdio' | 'streamable-http'
+  readonly transport: 'stdio' | 'sse' | 'streamable-http'
   readonly availability: RuntimeAvailability
   readonly target: string
   readonly installCommand?: string
@@ -30,6 +30,11 @@ export interface RedTeamRuntimeStatus {
 
 declare module '@deepseek-ai/cordis' {
   interface Events {
+    /**
+     * Publishes the latest Ant Sword skill and MCP availability snapshot.
+     * @mode emit
+     * @param snapshot - Complete runtime status observed by WebUI consumers.
+     */
     'ant-sword/runtime-status'(snapshot: RedTeamRuntimeStatus): void
   }
 }
@@ -69,7 +74,18 @@ function mcpStatus(server: McpServerConfig): McpRuntimeStatus {
   }
 }
 
-export function applyRuntimeStatus(ctx: Context, getServers: () => readonly McpServerConfig[]): void {
+async function readJsonBody(req: AsyncIterable<Uint8Array>): Promise<unknown> {
+  const chunks: Uint8Array[] = []
+  for await (const chunk of req) chunks.push(chunk)
+  return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown
+}
+
+export function applyRuntimeStatus(
+  ctx: Context,
+  getServers: () => readonly McpServerConfig[],
+  reloadMcp: (serverName: string) => Promise<void>,
+  probeMcp: (serverName: string) => Promise<{ toolCount: number }>,
+): void {
   let disposed = false
   let running = false
   let latest: RedTeamRuntimeStatus = {
@@ -89,6 +105,7 @@ export function applyRuntimeStatus(ctx: Context, getServers: () => readonly McpS
     } catch (error) {
       skills = { available: 0, provider: skillProvider.name, state: 'error', error: String(error) }
     }
+    // oxlint-disable-next-line typescript/no-unnecessary-condition -- disposal may occur while the awaited skill listing is in flight.
     if (!disposed) {
       latest = {
         checkedAt: Date.now(),
@@ -125,6 +142,49 @@ export function applyRuntimeStatus(ctx: Context, getServers: () => readonly McpS
         res.end(req.method === 'HEAD' ? undefined : body)
       },
     }), 'ant-sword-runtime-status: HTTP endpoint')
+    scope.effect(() => scope.webServer.register({
+      kind: 'exact',
+      path: '/ant-sword/mcp/reload',
+      handler: async (req, res) => {
+        if (req.method !== 'POST') {
+          res.writeHead(405)
+          res.end()
+          return
+        }
+        try {
+          const body = await readJsonBody(req as AsyncIterable<Uint8Array>) as { serverName?: unknown }
+          if (typeof body.serverName !== 'string' || body.serverName === '') throw new TypeError('serverName is required')
+          await reloadMcp(body.serverName)
+          await publish()
+          res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+          res.end(JSON.stringify({ ok: true, serverName: body.serverName }))
+        } catch (error) {
+          res.writeHead(400, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+          res.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) }))
+        }
+      },
+    }), 'ant-sword-runtime-status: MCP reload endpoint')
+    scope.effect(() => scope.webServer.register({
+      kind: 'exact',
+      path: '/ant-sword/mcp/probe',
+      handler: async (req, res) => {
+        if (req.method !== 'POST') {
+          res.writeHead(405)
+          res.end()
+          return
+        }
+        try {
+          const body = await readJsonBody(req as AsyncIterable<Uint8Array>) as { serverName?: unknown }
+          if (typeof body.serverName !== 'string' || body.serverName === '') throw new TypeError('serverName is required')
+          const result = await probeMcp(body.serverName)
+          res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+          res.end(JSON.stringify({ ok: true, serverName: body.serverName, toolCount: result.toolCount }))
+        } catch (error) {
+          res.writeHead(400, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+          res.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) }))
+        }
+      },
+    }), 'ant-sword-runtime-status: MCP probe endpoint')
   })
   ctx.on('skills/change', () => { void publish() })
 }

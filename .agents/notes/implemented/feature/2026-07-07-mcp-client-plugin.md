@@ -18,7 +18,7 @@ A single package `@deepseek-ai/dsh-mcp-client` at `packages/mcp/mcp-client/`. No
 
 ### SDK
 
-Use the official [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk) (`Client`, `StdioClientTransport`, `StreamableHTTPClientTransport`). The harness does not implement its own JSON-RPC — consistent with how ACP delegates to `@agentclientprotocol/sdk`.
+Use the official [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk) (`Client`, `StdioClientTransport`, `SSEClientTransport`, `StreamableHTTPClientTransport`). The legacy SSE transport remains available for servers migrating to Streamable HTTP. The harness does not implement its own JSON-RPC — consistent with how ACP delegates to `@agentclientprotocol/sdk`.
 
 ### Scope
 
@@ -43,6 +43,14 @@ interface StdioConfig {
   toolCallTimeoutMs?: number  // default 60_000
 }
 
+interface SseConfig {
+  transport: 'sse'
+  serverName: string
+  url: string
+  headers?: Record<string, string>
+  toolCallTimeoutMs?: number
+}
+
 interface StreamableHttpConfig {
   transport: 'streamable-http'
   serverName: string          // required namespace, ^[A-Za-z0-9_-]{1,32}$
@@ -51,7 +59,7 @@ interface StreamableHttpConfig {
   toolCallTimeoutMs?: number  // default 60_000
 }
 
-type Config = StdioConfig | StreamableHttpConfig
+type Config = StdioConfig | SseConfig | StreamableHttpConfig
 ```
 
 `serverName` is the stable local identity that namespaces this server's tools in the model-facing name (below). It is deliberately user configuration, NOT the remote `serverInfo.name`: the remote name is untrusted input, is not unique across deployments (prod and staging instances of one server report the same name), and may change on server upgrade — none of which may silently rename model-facing tools. A duplicate `serverName` across live instances is a configuration error: the later instance fails at load with an actionable message, never silent shadowing or skipping. A short `serverName` (`gh`) is also the knob for shortening public names.
@@ -83,7 +91,7 @@ The model sees `mcp__github__create_issue`, `mcp__github__search_code`, `mcp__we
 
 ### Lifecycle
 
-Boot-time from `cordis.yml`. HMR (`@cordisjs/plugin-hmr`) provides hot-swap: editing the yml entry triggers dispose of the old instance (disconnects, unregisters tools) and creation of a new one (connects, discovers, registers). No runtime-dynamic API for now. Public names are pure functions of `(serverName, rawName)`, so an HMR swap that keeps `serverName` recreates identical model-facing names — session history and permission rules stay valid — and adding or removing an unrelated server never renames an existing tool.
+Boot-time entries from `cordis.yml` hot-swap through HMR. Runtime consumers may also own plugin fibers directly: the Ant Sword bundle persists an MCP catalog in settings, transactionally reconciles enabled entries, exposes non-mutating protocol probes, and performs explicit dispose/connect reloads from its WebUI. Public names are pure functions of `(serverName, rawName)`, so either reload path recreates identical model-facing names when `serverName` is unchanged, and adding or removing an unrelated server never renames an existing tool.
 
 ### Tool discovery and registration
 

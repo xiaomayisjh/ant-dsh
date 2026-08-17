@@ -7,6 +7,7 @@
  */
 
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { scrubbedParentEnv } from '@deepseek-ai/dsh-subprocess'
@@ -37,6 +38,12 @@ export function createTransport(config: Config): Transport {
         env: buildChildEnv(config.env),
         cwd: config.cwd,
       })
+    case 'sse':
+      // oxlint-disable-next-line typescript/no-deprecated -- Compatibility with MCP servers that have not migrated to Streamable HTTP.
+      return new SSEClientTransport(
+        new URL(config.url),
+        { requestInit: { headers: config.headers } },
+      )
     case 'streamable-http':
       // The MCP SDK's StreamableHTTPClientTransport has optional callback
       // properties typed without `| undefined` (exactOptionalPropertyTypes

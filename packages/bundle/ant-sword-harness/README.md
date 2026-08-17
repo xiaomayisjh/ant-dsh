@@ -11,6 +11,7 @@ A security-research profile bundle for DeepSeek Harness. One install composes fi
 | **Reverse / CTF skill pack** | This package (`skills/`) | 93 reverse-engineering, pentest, and CTF skills registered on `ctx.skills`, invocable through the `skill` tool or by name. |
 | **Workspace snapshot + rewind** | This package (`src/rewind/`) | Captures a snapshot before every mutating tool call; `/rewind` restores files and forks the session back to a checkpoint's turn boundary. |
 | **Red-team agent preset** | This package (`preset/red-team/`) | A selectable agent preset with the standard mode's full capabilities plus a red-team operator persona and the bundled skill pack. |
+| **MCP runtime manager** | This package plus `@deepseek-ai/dsh-mcp-client` | Embedded security and `dsh-mcp-bridge` presets, live enable/disable/add/delete, JSON synchronization, protocol probes, and explicit reloads for stdio, SSE, and Streamable HTTP servers. |
 | **Agent teams** | [`@nanmicoder/dsh-agent-teams`](https://github.com/NanmiCoder/dsh-agent-teams) | Captain-led delegation: durable sub-agents, dependency-aware tasks, mailbox messaging. |
 | **Plugin market** | [`dshmarket`](https://github.com/dsh-market/dsh-market) | Browse, search, and one-click-install community plugins from Settings. |
 
@@ -97,6 +98,8 @@ The bundle materializes a `red-team` agent preset into the harness's writable pr
       listLimit: 10
 ```
 
+The WebUI MCP editor persists its catalog through the settings service and applies each committed generation without restarting the Host. It supports structured fields and `mcpServers` JSON in both directions, including Claude-style named entries; `测活` performs a temporary protocol handshake and tool discovery without replacing live registrations, while `热重载` disposes and reconnects the selected live plugin fiber.
+
 ## Model Experience
 
 Indirectly, through the bundled skill pack and the composed rows: this bundle is a patch-list carrier plus a skill provider, and the `skill` tool (`@deepseek-ai/dsh-tool-skill`) plus each composed third-party package own the model-facing rendering of whatever it contributes.
@@ -110,5 +113,5 @@ The 93-skill catalog is advertised through the harness's skill catalog mechanism
 - **Rewind snapshot hooks are pass-through on the tool pipeline** — they cover the configured `mutationTools` and the fs write/edit path only; a mutation performed outside those tools (for example by a third-party plugin that writes files directly without a registered tool) is not captured. Extend `mutationTools` to cover additional mutating tools.
 - **Fork granularity is the turn boundary** — `ctx.sessions.fork` rejects a boundary inside an open turn, so a rewind always resumes at the checkpoint's `turn/end`; a mid-turn checkpoint restores files precisely but forks at the turn close.
 - **Third-party rows are pinned to their authors' harness compatibility** — `@nanmicoder/dsh-agent-teams` and `dshmarket` declare their own harness peer versions; a profile on an incompatible harness build mounts them only as far as those packages support.
-- **The skill pack injects 93 catalog entries** — discovery consumers see the full list; skills that reference external MCP servers or native tools require those to be provisioned separately (they are out of this bundle's scope).
+- **The skill pack injects 93 catalog entries** — discovery consumers see the full list; a skill that names an MCP server still depends on the corresponding catalog entry being enabled and healthy.
 - **The red-team preset sync writes to the user preset root** — `$DSH_HOME/.agent-presets/red-team/` is created/updated on startup unless `syncRedTeamPreset: false`; a user-edited copy under that directory is overwritten only where its content differs from the bundled source, and files the user added beside it are left alone.

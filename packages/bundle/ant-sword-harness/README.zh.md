@@ -11,6 +11,7 @@
 | **逆向 / CTF 技能包** | 本包（`skills/`） | 在 `ctx.skills` 上注册 93 个逆向工程、渗透测试与 CTF 技能，可经 `skill` 工具或按名调用。 |
 | **工作区快照 + 回滚** | 本包（`src/rewind/`） | 每次变更性工具调用前捕获快照；`/rewind` 恢复文件并把会话 fork 回检查点的轮次边界。 |
 | **红队 agent 预设** | 本包（`preset/red-team/`） | 一个可选的 agent 预设，具备标准模式的全部能力，外加红队操作员人格与内嵌技能包。 |
+| **MCP 运行时管理器** | 本包与 `@deepseek-ai/dsh-mcp-client` | 内嵌安全工具和 `dsh-mcp-bridge` 预设，支持实时启停增删、JSON 同步、协议测活，以及 stdio、SSE、Streamable HTTP 服务器的显式重载。 |
 | **多智能体团队** | [`@nanmicoder/dsh-agent-teams`](https://github.com/NanmiCoder/dsh-agent-teams) | 队长式委派：持久子智能体、依赖感知任务、邮箱消息。 |
 | **插件市场** | [`dshmarket`](https://github.com/dsh-market/dsh-market) | 在设置中浏览、搜索、一键安装社区插件。 |
 
@@ -97,6 +98,8 @@ bundle 在启动时把 `red-team` agent 预设写入 harness 的可写预设根�
       listLimit: 10
 ```
 
+WebUI 的 MCP 编辑器通过 settings 服务持久化目录，并在不重启 Host 的情况下应用每个已提交世代。结构化字段与 `mcpServers` JSON 可双向同步，也接受 Claude 风格的命名条目；“测活”使用临时协议连接完成握手和工具发现，不替换存活工具注册，“热重载”则释放并重新连接选中的存活插件 fiber。
+
 ## Model Experience
 
 间接地，经由内嵌技能包与所组合的各行：本 bundle 是 patch 清单载体加一个技能 provider，技能对模型的呈现由 `skill` 工具（`@deepseek-ai/dsh-tool-skill`）与各被组合的第三方包负责。
@@ -110,5 +113,5 @@ bundle 在启动时把 `red-team` agent 预设写入 harness 的可写预设根�
 - **rewind 的快照挂钩是工具管线上的穿透** —— 只覆盖配置的 `mutationTools` 与 fs 写/改路径；未经注册工具直接写文件的第三方插件（绕过工具）不会被捕获。可扩展 `mutationTools` 覆盖更多变更性工具。
 - **fork 粒度是轮次边界** —— `ctx.sessions.fork` 拒绝落在开放轮次内的边界，因此回滚总是在检查点的 `turn/end` 恢复；轮次内的检查点能精确恢复文件，但 fork 发生在轮次收尾处。
 - **第三方行受各自作者的 harness 兼容性约束** —— `@nanmicoder/dsh-agent-teams` 与 `dshmarket` 各自声明 harness 对等版本；处于不兼容 harness 构建的 profile 只会在这些包支持的范围内挂载它们。
-- **技能包注入 93 条目录** —— 发现消费者会看到完整列表；引用外部 MCP server 或原生工具的技能需另行配置（不在本 bundle 范围内）。
+- **技能包注入 93 条目录** —— 发现消费者会看到完整列表；技能所命名的 MCP server 仍依赖对应目录项处于启用且健康状态。
 - **红队预设同步会写用户预设根** —— 除非设 `syncRedTeamPreset: false`，否则启动时会创建/更新 `$DSH_HOME/.agent-presets/red-team/`；该目录下用户改过的副本仅在与内嵌源内容不同处被覆盖，用户自行新增的文件保持不动。

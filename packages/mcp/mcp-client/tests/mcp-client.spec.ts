@@ -721,6 +721,21 @@ describe('createTransport', () => {
     expect(transport).toHaveProperty('close')
   })
 
+  it('creates SSEClientTransport for legacy SSE config', () => {
+    const config: Config = {
+      transport: 'sse',
+      serverName: 'srv',
+      url: 'http://localhost:3000/sse',
+      headers: { Authorization: 'Bearer token' },
+      toolCallTimeoutMs: 60_000,
+      failOnStartupError: false,
+    }
+    const transport = createTransport(config)
+    expect(transport).toBeDefined()
+    expect(transport).toHaveProperty('start')
+    expect(transport).toHaveProperty('close')
+  })
+
   it('creates StreamableHTTPClientTransport for http config without headers', () => {
     const config: Config = {
       transport: 'streamable-http',

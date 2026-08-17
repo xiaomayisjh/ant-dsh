@@ -1,7 +1,7 @@
 /**
- * Embedded MCP server config: the default eight-server catalog, the enabled
- * filter, and the pentestswarm credential injection — the knobs the dsh
- * plugin-config UI edits. Mounting is asserted by intercepting ctx.plugin.
+ * Embedded MCP server config: the security and bridge catalogs, the enabled
+ * filter, and the pentestswarm credential injection. Mounting is asserted by
+ * intercepting ctx.plugin.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -22,11 +22,18 @@ function recordingCtx(): { ctx: Context; mounted: { config: unknown }[] } {
 }
 
 describe('embedded MCP server catalog', () => {
-  it('ships the eight-server default catalog', () => {
-    expect(DEFAULT_MCP_SERVERS).toHaveLength(8)
+  it('ships the security and dsh-mcp-bridge catalogs', () => {
+    expect(DEFAULT_MCP_SERVERS).toHaveLength(14)
     const names = DEFAULT_MCP_SERVERS.map(s => s.serverName)
-    for (const expected of ['kali', 'metasploit', 'hexstrike', 'pentestswarm', 'jshook', 'anything', 'idapro', 'ghidra']) {
+    for (const expected of [
+      'kali', 'metasploit', 'hexstrike', 'pentestswarm', 'jshook', 'anything', 'idapro', 'ghidra',
+      'everything', 'memory', 'filesystem', 'github', 'playwright', 'remote-http',
+    ]) {
       expect(names).toContain(expected)
+    }
+    expect(DEFAULT_MCP_SERVERS.find(server => server.serverName === 'everything')?.enabled).toBe(true)
+    for (const name of ['memory', 'filesystem', 'github', 'playwright', 'remote-http']) {
+      expect(DEFAULT_MCP_SERVERS.find(server => server.serverName === name)?.enabled).toBe(false)
     }
   })
 

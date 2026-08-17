@@ -13,10 +13,12 @@
  * @module @deepseek-ai/dsh-mcp-client
  */
 
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { RECONNECT_DEFAULTS, resolveReconnectPolicy, startConnection } from './connection.ts'
+import { createTransport } from './transport.ts'
 import type { ReconnectConfig } from './connection.ts'
 // Side-effect type import: declaration-merges `ctx.tools` onto Context.
 import type {} from '@deepseek-ai/dsh-tools'
@@ -94,8 +96,26 @@ export interface StreamableHttpConfig {
   reconnect?: ReconnectConfig
 }
 
-/** Configuration for one stdio or Streamable HTTP MCP server. */
-export type Config = StdioConfig | StreamableHttpConfig
+/** Config for connecting to an MCP server over legacy HTTP+SSE. */
+export interface SseConfig {
+  /** Selects the legacy SSE transport. */
+  transport: 'sse'
+  /** Stable local namespace for model-facing tool names. */
+  serverName: string
+  /** SSE endpoint URL. */
+  url: string
+  /** Additional headers attached to SSE and message requests. */
+  headers: Record<string, string>
+  /** Per-tool-call timeout in milliseconds. */
+  toolCallTimeoutMs: number
+  /** Fail plugin activation when the initial connection or tool synchronization fails. */
+  failOnStartupError: boolean
+  /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
+  reconnect?: ReconnectConfig
+}
+
+/** Configuration for one stdio, SSE, or Streamable HTTP MCP server. */
+export type Config = StdioConfig | SseConfig | StreamableHttpConfig
 
 const Reconnect: z<ReconnectConfig> = z.object({
   enabled: z.boolean().default(RECONNECT_DEFAULTS.enabled),
@@ -117,6 +137,15 @@ export const Config = z.union([
     reconnect: Reconnect,
   }),
   z.object({
+    transport: z.const('sse'),
+    serverName: z.string().required().pattern(SERVER_NAME_PATTERN),
+    url: z.string().required(),
+    headers: z.dict(String).default({}),
+    toolCallTimeoutMs: z.number().default(DEFAULT_TOOL_CALL_TIMEOUT_MS),
+    failOnStartupError: z.boolean().default(false),
+    reconnect: Reconnect,
+  }),
+  z.object({
     transport: z.const('streamable-http'),
     serverName: z.string().required().pattern(SERVER_NAME_PATTERN),
     url: z.string().required(),
@@ -128,6 +157,29 @@ export const Config = z.union([
 ]) as unknown as z<Config>
 
 // ---- Plugin apply ----
+
+/** Result of an explicit MCP connectivity probe. */
+export interface McpProbeResult {
+  /** Number of tools returned by the first tool-list response. */
+  toolCount: number
+}
+
+/**
+ * Connect, initialize, list tools, and close without registering model tools.
+ * @param config - Fully resolved MCP client config.
+ * @returns Observed tool count after a successful protocol handshake.
+ */
+export async function probeMcpServer(config: Config): Promise<McpProbeResult> {
+  const client = new Client({ name: 'dsh-mcp-probe', version: '1.0.0' })
+  const transport = createTransport(config)
+  try {
+    await client.connect(transport)
+    const result = await client.listTools()
+    return { toolCount: result.tools.length }
+  } finally {
+    await client.close().catch(() => undefined)
+  }
+}
 
 /**
  * Connect one MCP server and publish its initial tool generation before activation.

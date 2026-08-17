@@ -35,20 +35,20 @@ The model sees `mcp__github__create_issue`, `mcp__web__search`, … — the same
 
 | Field | Transport | Required | Description |
 |---|---|---|---|
-| `transport` | both | yes | `"stdio"` or `"streamable-http"` |
-| `serverName` | both | yes | Namespace for this server's model-facing tool names; `[A-Za-z0-9_-]{1,32}`, unique across live instances |
+| `transport` | all | yes | `"stdio"`, legacy `"sse"`, or `"streamable-http"` |
+| `serverName` | all | yes | Namespace for this server's model-facing tool names; `[A-Za-z0-9_-]{1,32}`, unique across live instances |
 | `command` | stdio | yes | Executable to spawn |
 | `args` | stdio | no | Arguments passed to the command |
 | `env` | stdio | no | Extra env vars merged on top of scrubbed ambient env |
 | `cwd` | stdio | no | Working directory for the child process |
 | `url` | http | yes | MCP server URL |
 | `headers` | http | no | Extra headers (e.g. auth tokens) |
-| `toolCallTimeoutMs` | both | no | Timeout per `callTool` invocation (default 60000) |
-| `failOnStartupError` | both | no | Reject plugin activation when initial connection or tool synchronization fails (default `false`) |
-| `reconnect.enabled` | both | no | Reconnect automatically after a lost connection (default `true`) |
-| `reconnect.initialDelayMs` | both | no | First reconnect delay in ms; doubles per consecutive failed attempt (default 500) |
-| `reconnect.maxDelayMs` | both | no | Backoff ceiling in ms; also the uptime after which the attempt budget resets (default 30000) |
-| `reconnect.maxAttempts` | both | no | Consecutive failed attempts per outage before giving up for good (default 10) |
+| `toolCallTimeoutMs` | all | no | Timeout per `callTool` invocation (default 60000) |
+| `failOnStartupError` | all | no | Reject plugin activation when initial connection or tool synchronization fails (default `false`) |
+| `reconnect.enabled` | all | no | Reconnect automatically after a lost connection (default `true`) |
+| `reconnect.initialDelayMs` | all | no | First reconnect delay in ms; doubles per consecutive failed attempt (default 500) |
+| `reconnect.maxDelayMs` | all | no | Backoff ceiling in ms; also the uptime after which the attempt budget resets (default 30000) |
+| `reconnect.maxAttempts` | all | no | Consecutive failed attempts per outage before giving up for good (default 10) |
 
 ## Tool naming
 

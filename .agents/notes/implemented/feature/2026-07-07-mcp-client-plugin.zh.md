@@ -18,7 +18,7 @@ harness 此前无法消费 MCP（Model Context Protocol）生态中的工具。M
 
 ### SDK
 
-使用官方 [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk)（`Client`、`StdioClientTransport`、`StreamableHTTPClientTransport`）。harness 不自行实现 JSON-RPC，与 ACP 委托给 `@agentclientprotocol/sdk` 的做法一致。
+使用官方 [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk)（`Client`、`StdioClientTransport`、`SSEClientTransport`、`StreamableHTTPClientTransport`）。旧版 SSE 传输用于仍在迁移到 Streamable HTTP 的服务器。harness 不自行实现 JSON-RPC，与 ACP 委托给 `@agentclientprotocol/sdk` 的做法一致。
 
 ### 范围
 
@@ -43,6 +43,14 @@ interface StdioConfig {
   toolCallTimeoutMs?: number  // default 60_000
 }
 
+interface SseConfig {
+  transport: 'sse'
+  serverName: string
+  url: string
+  headers?: Record<string, string>
+  toolCallTimeoutMs?: number
+}
+
 interface StreamableHttpConfig {
   transport: 'streamable-http'
   serverName: string          // required namespace, ^[A-Za-z0-9_-]{1,32}$
@@ -51,7 +59,7 @@ interface StreamableHttpConfig {
   toolCallTimeoutMs?: number  // default 60_000
 }
 
-type Config = StdioConfig | StreamableHttpConfig
+type Config = StdioConfig | SseConfig | StreamableHttpConfig
 ```
 
 `serverName` 是稳定的本地标识，用于在模型可见名称（见下文）中为该服务器的工具提供命名空间。它有意设计为用户配置，而非远端的 `serverInfo.name`：远端名称是不可信输入、跨部署不唯一（同一服务器的生产和预发布实例报告相同名称）、且可能在服务器升级时变化——这些都不得静默重命名模型可见工具。多个活跃实例使用重复的 `serverName` 属于配置错误：后加载的实例在启动时以可操作的错误消息失败，绝不静默覆盖或跳过。短 `serverName`（如 `gh`）也是缩短公开名称的配置手段。
@@ -83,7 +91,7 @@ type Config = StdioConfig | StreamableHttpConfig
 
 ### 生命周期
 
-启动时从 `cordis.yml` 加载。HMR（热模块替换）（`@cordisjs/plugin-hmr`）提供热替换：编辑 yml 条目触发旧实例的 dispose（资源释放）（断开连接、注销工具），并创建新实例（连接、发现、注册）。目前不提供运行时动态 API。公开名称是 `(serverName, rawName)` 的纯函数，因此保持 `serverName` 不变的 HMR 替换会重建完全相同的模型可见名称——会话历史和权限规则保持有效——而添加或移除不相关的服务器永远不会重命名已有工具。
+`cordis.yml` 启动条目通过 HMR 热替换。运行时消费方也可以直接持有插件 fiber：Ant Sword bundle 将 MCP 目录持久化到 settings，事务式协调启用条目，提供不改变存活工具注册的协议测活，并从 WebUI 执行显式 dispose/连接重载。公开名称是 `(serverName, rawName)` 的纯函数，因此两种重载路径在 `serverName` 不变时都会重建完全相同的模型可见名称，而添加或移除不相关服务器永远不会重命名已有工具。
 
 ### 工具发现与注册
 

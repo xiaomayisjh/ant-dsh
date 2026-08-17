@@ -26,7 +26,7 @@ function clientConfig(server: McpServerConfig, pentestswarmApiKey?: string): Mcp
     }
   }
   return {
-    transport: 'streamable-http', serverName: server.serverName, url: server.url ?? '', headers: server.headers ?? {},
+    transport: server.transport, serverName: server.serverName, url: server.url ?? '', headers: server.headers ?? {},
     toolCallTimeoutMs: server.toolCallTimeoutMs ?? 60_000, failOnStartupError: true,
     reconnect: { enabled: true, initialDelayMs: 1_000, maxDelayMs: 30_000, maxAttempts: 5 },
   }
@@ -42,6 +42,40 @@ export class McpReconciler implements RuntimeReconciler {
     private readonly pentestswarmApiKey?: string,
     private readonly canResolveCommand: (command: string) => boolean = commandExists,
   ) {}
+
+  /** Probe one server without replacing its live tool registrations. */
+  async probe(serverName: string): Promise<mcpClient.McpProbeResult> {
+    const config = this.configs.get(serverName)
+    if (config === undefined) throw new TypeError(`unknown MCP server "${serverName}"`)
+    if (config.enabled === false) throw new TypeError(`MCP server "${serverName}" is disabled`)
+    if (config.transport === 'stdio' && !this.canResolveCommand(config.command ?? '')) {
+      throw new TypeError(`MCP server "${serverName}" command is not available`)
+    }
+    return mcpClient.probeMcpServer(clientConfig(config, this.pentestswarmApiKey))
+  }
+
+  /** Force one configured server through a dispose/connect cycle. */
+  async reload(serverName: string): Promise<void> {
+    const config = this.configs.get(serverName)
+    if (config === undefined) throw new TypeError(`unknown MCP server "${serverName}"`)
+    const current = this.fibers.get(serverName)
+    if (current !== undefined) {
+      await current.dispose()
+      this.fibers.delete(serverName)
+    }
+    if (config.enabled === false) throw new TypeError(`MCP server "${serverName}" is disabled`)
+    if (config.transport === 'stdio' && !this.canResolveCommand(config.command ?? '')) {
+      throw new TypeError(`MCP server "${serverName}" command is not available`)
+    }
+    const fiber = this.ctx.plugin(mcpClient, clientConfig(config, this.pentestswarmApiKey))
+    try {
+      await fiber.await()
+      this.fibers.set(serverName, fiber)
+    } catch (error) {
+      await fiber.dispose()
+      throw error
+    }
+  }
 
   prepare(next: AntSwordRuntimeConfig, _previousConfig: AntSwordRuntimeConfig): RuntimePreparedChange {
     const desired = new Map(next.mcpServers.map(server => [server.serverName, server]))

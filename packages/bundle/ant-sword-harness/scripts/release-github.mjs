@@ -258,7 +258,8 @@ async function main() {
 
     if (values['dry-run']) {
       console.log(`release: dry-run — would release ${values.repo} @ ${tag} with ${tarballName}`)
-      console.log(`release: install with: ${installCommand(values.repo, values.profile)}`)
+      console.log(`release: install on Windows with: ${installCommand(values.repo, values.profile)}`)
+      console.log(`release: install on Linux/macOS with: curl -fsSL "https://raw.githubusercontent.com/${values.repo}/dev/install-ant-sword.sh" | bash`)
       return
     }
 
@@ -279,8 +280,10 @@ async function main() {
     console.log(`release: uploaded ${asset.name} (${asset.size} bytes)`)
 
     console.log('')
-    console.log('Install with one line:')
+    console.log('Install with one line (Windows PowerShell):')
     console.log(`  ${installCommand(values.repo, values.profile)}`)
+    console.log('Install with one line (Linux/macOS):')
+    console.log(`  curl -fsSL "https://raw.githubusercontent.com/${values.repo}/dev/install-ant-sword.sh" | bash`)
   } finally {
     rmSync(destination, { recursive: true, force: true })
   }

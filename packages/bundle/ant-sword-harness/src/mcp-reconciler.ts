@@ -43,6 +43,11 @@ export class McpReconciler implements RuntimeReconciler {
     private readonly canResolveCommand: (command: string) => boolean = commandExists,
   ) {}
 
+  /** Whether one server currently owns an active plugin fiber. */
+  isMounted(serverName: string): boolean {
+    return this.fibers.has(serverName)
+  }
+
   /** Probe one server without replacing its live tool registrations. */
   async probe(serverName: string): Promise<mcpClient.McpProbeResult> {
     const config = this.configs.get(serverName)

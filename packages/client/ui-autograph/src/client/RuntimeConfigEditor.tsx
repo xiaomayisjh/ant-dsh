@@ -20,6 +20,11 @@ export interface RuntimeConfigValue {
   rules: RuleConfig[]
 }
 
+interface McpProbeView {
+  toolCount: number
+  tools: readonly { name: string; description?: string }[]
+}
+
 interface Props {
   configScope: SettingsScope<RuntimeConfigValue>
 }
@@ -43,6 +48,14 @@ function KeyValueEditor({ value, onChange, label }: { value: Record<string, stri
   </div>)}<button type="button" onClick={() =>{  onChange({ ...value, [`KEY_${entries.length + 1}`]: '' }) }}>添加</button></div>
 }
 
+function McpProbeDetails({ probe }: { probe: McpProbeView | undefined }) {
+  if (probe === undefined) return null
+  return <details>
+    <summary>已发现 {probe.toolCount} 个工具</summary>
+    <ul>{probe.tools.map(tool => <li key={tool.name}><code>{tool.name}</code>{tool.description === undefined ? null : <small>{tool.description}</small>}</li>)}</ul>
+  </details>
+}
+
 export function RuntimeConfigEditor({ configScope }: Props) {
   const snapshot = useSyncExternalStore(
     listener => configScope.subscribe(listener),
@@ -53,6 +66,7 @@ export function RuntimeConfigEditor({ configScope }: Props) {
   const [saving, setSaving] = useState(false)
   const [mcpJson, setMcpJson] = useState('')
   const [mcpMessage, setMcpMessage] = useState<string>()
+  const [mcpProbes, setMcpProbes] = useState<Record<string, McpProbeView>>({})
   const [skillDraft, setSkillDraft] = useState({ name: '', description: '', whenToUse: '', modelInvocable: true, userInvocable: true, content: '' })
   const [skillError, setSkillError] = useState<string>()
 
@@ -95,10 +109,13 @@ export function RuntimeConfigEditor({ configScope }: Props) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ serverName }),
     })
-    const result = await response.json() as { ok: boolean; error?: string; toolCount?: number }
+    const result = await response.json() as { ok: boolean; error?: string; toolCount?: number; tools?: readonly { name: string; description?: string }[] }
     if (!result.ok) {
       setMcpMessage(result.error ?? `${serverName} 操作失败。`)
       return
+    }
+    if (action === 'probe') {
+      setMcpProbes(current => ({ ...current, [serverName]: { toolCount: result.toolCount ?? 0, tools: result.tools ?? [] } }))
     }
     setMcpMessage(action === 'probe'
       ? `${serverName} 测活成功，发现 ${result.toolCount ?? 0} 个工具。`
@@ -153,6 +170,7 @@ export function RuntimeConfigEditor({ configScope }: Props) {
             <KeyValueEditor label="请求头" value={server.headers ?? {}} onChange={(headers) =>{  setDraft(current => ({ ...current, mcpServers: current.mcpServers.map((item, at) => at === index ? { ...item, headers } : item) })) }} />
           </>}
           <label>工具超时（毫秒）<input type="number" min={1} value={server.toolCallTimeoutMs ?? 60_000} onChange={(event) =>{  setDraft(current => ({ ...current, mcpServers: current.mcpServers.map((item, at) => at === index ? { ...item, toolCallTimeoutMs: Number(event.target.value) } : item) })) }} /></label>
+          <McpProbeDetails probe={mcpProbes[server.serverName]} />
           <button type="button" onClick={() => { void runMcpAction(server.serverName, 'probe') }}>测活</button>
           <button type="button" onClick={() => { void runMcpAction(server.serverName, 'reload') }}>热重载</button>
           <button type="button" onClick={() =>{  setDraft(current => ({ ...current, mcpServers: current.mcpServers.filter((_, at) => at !== index) })) }}>删除</button>

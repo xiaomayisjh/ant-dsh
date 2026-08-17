@@ -24,6 +24,12 @@ Windows PowerShell installs the complete bundle into the `web` profile, includin
 irm https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.ps1 | iex
 ```
 
+Linux and macOS use the equivalent POSIX bootstrap:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.sh | bash
+```
+
 Then start it directly:
 
 ```powershell

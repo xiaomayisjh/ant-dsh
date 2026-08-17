@@ -24,6 +24,12 @@ Windows PowerShell 一行安装完整 bundle 到 `web` profile，包括 UI、多
 irm https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.ps1 | iex
 ```
 
+Linux 与 macOS 使用对应的 POSIX 安装入口：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.sh | bash
+```
+
 安装完成后直接启动：
 
 ```powershell

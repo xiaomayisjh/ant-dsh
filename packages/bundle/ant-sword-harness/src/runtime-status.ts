@@ -8,6 +8,12 @@ import { skillProvider } from './skills.ts'
 
 export type RuntimeAvailability = 'available' | 'missing' | 'configured' | 'disabled'
 
+export interface McpProbeSnapshot {
+  readonly checkedAt: number
+  readonly toolCount: number
+  readonly tools: readonly { readonly name: string; readonly description?: string }[]
+}
+
 export interface McpRuntimeStatus {
   readonly serverName: string
   readonly transport: 'stdio' | 'sse' | 'streamable-http'
@@ -15,6 +21,8 @@ export interface McpRuntimeStatus {
   readonly target: string
   readonly installCommand?: string
   readonly installHint: string
+  readonly mounted: boolean
+  readonly lastProbe?: McpProbeSnapshot
 }
 
 export interface RedTeamRuntimeStatus {
@@ -56,7 +64,11 @@ function commandExists(command: string): boolean {
   return spawnSync(locator, [command], { stdio: 'ignore', windowsHide: true }).status === 0
 }
 
-function mcpStatus(server: McpServerConfig): McpRuntimeStatus {
+function mcpStatus(
+  server: McpServerConfig,
+  probes: ReadonlyMap<string, McpProbeSnapshot>,
+  isMounted: (serverName: string) => boolean,
+): McpRuntimeStatus {
   const guide = INSTALL_GUIDES[server.serverName] ?? { hint: '安装对应 MCP server，并确认配置的命令或 URL 可访问。' }
   const target = server.transport === 'stdio' ? (server.command ?? '') : (server.url ?? '')
   const availability: RuntimeAvailability = server.enabled === false
@@ -64,6 +76,7 @@ function mcpStatus(server: McpServerConfig): McpRuntimeStatus {
     : server.transport === 'stdio'
       ? commandExists(target) ? 'available' : 'missing'
       : 'configured'
+  const lastProbe = probes.get(server.serverName)
   return {
     serverName: server.serverName,
     transport: server.transport,
@@ -71,6 +84,8 @@ function mcpStatus(server: McpServerConfig): McpRuntimeStatus {
     target,
     ...(guide.command === undefined ? {} : { installCommand: guide.command }),
     installHint: guide.hint,
+    mounted: isMounted(server.serverName),
+    ...(lastProbe === undefined ? {} : { lastProbe }),
   }
 }
 
@@ -84,14 +99,16 @@ export function applyRuntimeStatus(
   ctx: Context,
   getServers: () => readonly McpServerConfig[],
   reloadMcp: (serverName: string) => Promise<void>,
-  probeMcp: (serverName: string) => Promise<{ toolCount: number }>,
+  probeMcp: (serverName: string) => Promise<{ toolCount: number; tools: readonly { name: string; description?: string }[] }>,
+  isMcpMounted: (serverName: string) => boolean,
 ): void {
   let disposed = false
   let running = false
+  const probes = new Map<string, McpProbeSnapshot>()
   let latest: RedTeamRuntimeStatus = {
     checkedAt: Date.now(),
     skills: { available: 0, provider: skillProvider.name, state: 'ready' },
-    mcp: getServers().map(mcpStatus),
+    mcp: getServers().map(server => mcpStatus(server, probes, isMcpMounted)),
   }
 
   const publish = async (): Promise<void> => {
@@ -105,12 +122,11 @@ export function applyRuntimeStatus(
     } catch (error) {
       skills = { available: 0, provider: skillProvider.name, state: 'error', error: String(error) }
     }
-    // oxlint-disable-next-line typescript/no-unnecessary-condition -- disposal may occur while the awaited skill listing is in flight.
     if (!disposed) {
       latest = {
         checkedAt: Date.now(),
         skills,
-        mcp: getServers().map(mcpStatus),
+        mcp: getServers().map(server => mcpStatus(server, probes, isMcpMounted)),
       }
       ctx.emit('ant-sword/runtime-status', latest)
     }
@@ -177,8 +193,10 @@ export function applyRuntimeStatus(
           const body = await readJsonBody(req as AsyncIterable<Uint8Array>) as { serverName?: unknown }
           if (typeof body.serverName !== 'string' || body.serverName === '') throw new TypeError('serverName is required')
           const result = await probeMcp(body.serverName)
+          probes.set(body.serverName, { checkedAt: Date.now(), toolCount: result.toolCount, tools: result.tools })
+          await publish()
           res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
-          res.end(JSON.stringify({ ok: true, serverName: body.serverName, toolCount: result.toolCount }))
+          res.end(JSON.stringify({ ok: true, serverName: body.serverName, toolCount: result.toolCount, tools: result.tools }))
         } catch (error) {
           res.writeHead(400, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
           res.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) }))

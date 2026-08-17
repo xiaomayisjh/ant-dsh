@@ -158,10 +158,18 @@ export const Config = z.union([
 
 // ---- Plugin apply ----
 
+/** One tool exposed by an MCP server during a connectivity probe. */
+export interface McpProbeTool {
+  readonly name: string
+  readonly description?: string
+}
+
 /** Result of an explicit MCP connectivity probe. */
 export interface McpProbeResult {
   /** Number of tools returned by the first tool-list response. */
-  toolCount: number
+  readonly toolCount: number
+  /** Tool metadata returned by the server, in protocol order. */
+  readonly tools: readonly McpProbeTool[]
 }
 
 /**
@@ -175,7 +183,13 @@ export async function probeMcpServer(config: Config): Promise<McpProbeResult> {
   try {
     await client.connect(transport)
     const result = await client.listTools()
-    return { toolCount: result.tools.length }
+    return {
+      toolCount: result.tools.length,
+      tools: result.tools.map(tool => ({
+        name: tool.name,
+        ...(tool.description === undefined ? {} : { description: tool.description }),
+      })),
+    }
   } finally {
     await client.close().catch(() => undefined)
   }

@@ -77,6 +77,7 @@ export function apply(ctx: Context, config: Config): void {
     () => runtime.controller.snapshot().config.mcpServers,
     serverName => runtime.mcp.reload(serverName),
     serverName => runtime.mcp.probe(serverName),
+    serverName => runtime.mcp.isMounted(serverName),
   )
   applyInstallApi(ctx)
   applySkillApi(ctx, skillsReconciler)

@@ -44,7 +44,7 @@ dsh web
 
 ```powershell
 .\install-ant-sword.ps1 -Release C:\path\to\ant-sword-release
-# 也可直接传 manifest：
+# A manifest path is equivalent:
 .\install-ant-sword.ps1 -Release C:\path\to\ant-sword-release\ant-sword-release-manifest.json
 ```
 
@@ -117,7 +117,7 @@ bundle 在启动时把 `red-team` agent 预设写入 harness 的可写预设根�
       listLimit: 10
 ```
 
-WebUI 的 MCP 编辑器通过 settings 服务持久化目录，并在不重启 Host 的情况下应用每个已提交世代。结构化字段与 `mcpServers` JSON 可双向同步，也接受 Claude 风格的命名条目；“测活”使用临时协议连接完成握手和工具发现，不替换存活工具注册，“热重载”则释放并重新连接选中的存活插件 fiber。
+WebUI 的 MCP 编辑器通过 `ant-sword-runtime` settings namespace 持久化目录，并在不重启 Host 的情况下应用每个已提交世代。Host 暴露该 namespace 时使用标准 settings client scope；未暴露时，由 bundle 自有且仅限 loopback 的 `/ant-sword/runtime-config` bridge 将带 revision fence 的字段变更交给同一个 `ctx.settings` provider、schema 校验和 reconciler。结构化字段与 `mcpServers` JSON 可双向同步，也接受 Claude 风格的命名条目；“测活”使用临时协议连接完成握手和工具发现，不替换存活工具注册，“热重载”则释放并重新连接选中的存活插件 fiber。
 
 ## Model Experience
 

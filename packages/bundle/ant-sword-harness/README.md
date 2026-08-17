@@ -117,7 +117,7 @@ The bundle materializes a `red-team` agent preset into the harness's writable pr
       listLimit: 10
 ```
 
-The WebUI MCP editor persists its catalog through the settings service and applies each committed generation without restarting the Host. It supports structured fields and `mcpServers` JSON in both directions, including Claude-style named entries; `测活` performs a temporary protocol handshake and tool discovery without replacing live registrations, while `热重载` disposes and reconnects the selected live plugin fiber.
+The WebUI MCP editor persists its catalog through the `ant-sword-runtime` settings namespace and applies each committed generation without restarting the Host. It uses the standard settings client scope when that namespace is exposed; otherwise, the bundle-owned loopback-only `/ant-sword/runtime-config` bridge carries revision-fenced field mutations through the same `ctx.settings` provider, schema validation, and reconcilers. It supports structured fields and `mcpServers` JSON in both directions, including Claude-style named entries; `测活` performs a temporary protocol handshake and tool discovery without replacing live registrations, while `热重载` disposes and reconnects the selected live plugin fiber.
 
 ## Model Experience
 

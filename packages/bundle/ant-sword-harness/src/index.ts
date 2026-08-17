@@ -14,6 +14,7 @@ import { syncRedTeamPreset, syncRedTeamAutoPreset } from './preset-sync.ts'
 import { applyAutoLoop, AutoLoopConfigSchema } from './auto/index.ts'
 import type { AutoLoopConfig } from './auto/index.ts'
 import { applyRuntimeStatus } from './runtime-status.ts'
+import { applyRuntimeConfigApi } from './runtime-config-api.ts'
 import { applyInstallApi } from './installer/api.ts'
 import { DEFAULT_MCP_SERVERS, McpServerSchema } from './mcp-servers.ts'
 import { applyDynamicRuntime } from './dynamic-runtime.ts'
@@ -67,6 +68,7 @@ export function apply(ctx: Context, config: Config): void {
     ? DEFAULT_MCP_SERVERS
     : config.mcpServers
   const runtime = applyDynamicRuntime(ctx, mcpServers, config.pentestswarmApiKey, skillsReconciler)
+  applyRuntimeConfigApi(ctx, runtime.controller)
   applyRuntimeStatus(
     ctx,
     () => runtime.controller.snapshot().config.mcpServers,

@@ -40,6 +40,8 @@ EXTRA_FILE_PATTERNS = (
     'cordis.patch.yml', 'lib/styles', 'lib/packaged-bin.js', 'lib/runner.js',
     'lib/types-*.js', 'assets', 'scripts/ensure-spawn-helper.mjs',
     'lib/client.js', 'lib/loader.js', 'lib/store/index.js', 'lib/startup.js',
+    'lib/rewind-plugin.js', 'skills', 'preset', 'kali', 'docs', 'RULES.md',
+    'RULES_zh.md', 'README_AI.md', 'README_EN.md',
     'lib/worker.cjs', 'lib/bin.js', 'lib/typert.host.js', 'lib/typert.host.d.ts',
     'lib/typert.client.js', 'lib/typert.client.d.ts', 'lib/typert.remote-client.js',
     'lib/typert.remote-client.d.ts',

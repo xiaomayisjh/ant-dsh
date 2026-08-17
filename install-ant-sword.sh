@@ -2,17 +2,30 @@
 set -euo pipefail
 
 PROFILE="${PROFILE:-web}"
-REPOSITORY="${REPOSITORY:-xiaomayisjh/ant-dsh}"
+REPOSITORY="${REPOSITORY:-xiaomayisjh/dsh-ant-sword}"
 REF="${REF:-dev}"
+RELEASE="${RELEASE:-}"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --profile) PROFILE="$2"; shift 2 ;;
     --repository) REPOSITORY="$2"; shift 2 ;;
     --ref) REF="$2"; shift 2 ;;
+    --release) RELEASE="$2"; shift 2 ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
   esac
 done
+
+if [[ -n "$RELEASE" ]]; then
+  command -v node >/dev/null 2>&1 || { echo "Required command not found: node" >&2; exit 1; }
+  installer="$SCRIPT_DIR/packages/bundle/ant-sword-harness/scripts/install-profile.mjs"
+  [[ -f "$installer" ]] || { echo "Installer module not found: $installer" >&2; exit 1; }
+  node "$installer" --profile "$PROFILE" --release "$RELEASE"
+  if [[ "$PROFILE" == web ]]; then start_command='dsh web'; else start_command="dsh --profile $PROFILE"; fi
+  echo "Ant Sword deployment completed. Start with: $start_command"
+  exit 0
+fi
 
 for command in node corepack curl; do
   command -v "$command" >/dev/null 2>&1 || { echo "Required command not found: $command" >&2; exit 1; }

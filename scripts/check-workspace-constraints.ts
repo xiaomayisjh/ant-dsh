@@ -47,6 +47,9 @@ const repositoryUrl = 'git+https://github.com/deepseek-harness/deepseek-harness.
  * their trusted publishing against the repository that runs the workflow.
  */
 const publishedRepositoryUrl = 'git+https://github.com/deepseek-ai/deepseek-harness.git'
+const publishedRepositoryOverrides: Readonly<Record<string, string>> = {
+  '@deepseek-ai/dsh-ant-sword-harness': 'git+https://github.com/xiaomayisjh/dsh-ant-sword.git',
+}
 /** Directories whose packages this repository publishes: one release member each. */
 const releaseMemberDirectory = /^(?:packages\/[^/]+\/[^/]+|apps\/[^/]+|vendor\/[^/]+)$/
 
@@ -135,7 +138,18 @@ const packageFileExtras: Readonly<Record<string, readonly string[]>> = {
   '@deepseek-ai/dsh-base': ['cordis.patch.yml'],
   '@deepseek-ai/dsh-web-app': ['cordis.patch.yml'],
   '@deepseek-ai/dsh-headless': ['cordis.patch.yml'],
-  '@deepseek-ai/dsh-ant-sword-harness': ['cordis.patch.yml', 'skills', 'preset'],
+  '@deepseek-ai/dsh-ant-sword-harness': [
+    'lib/rewind-plugin.js',
+    'cordis.patch.yml',
+    'skills',
+    'preset',
+    'kali',
+    'docs',
+    'RULES.md',
+    'RULES_zh.md',
+    'README_AI.md',
+    'README_EN.md',
+  ],
   '@deepseek-ai/dsh-client-ui-theme': ['lib/styles'],
   // The Python runtime uses a distinct closed-resolution bin; the public CLI
   // keeps config-owned bare-package resolution through lib/bin.js.
@@ -258,10 +272,13 @@ function checkWorkspace({ dir, manifest }: WorkspaceManifest): string[] {
     if (manifest.publishConfig?.access !== 'public') {
       errors.push(`${label}: release member must set publishConfig.access to "public"`)
     }
+    const expectedRepositoryUrl = manifest.name === undefined
+      ? publishedRepositoryUrl
+      : publishedRepositoryOverrides[manifest.name] ?? publishedRepositoryUrl
     if (manifest.repository?.type !== 'git'
-      || manifest.repository.url !== publishedRepositoryUrl
+      || manifest.repository.url !== expectedRepositoryUrl
       || manifest.repository.directory !== dir) {
-      errors.push(`${label}: release member repository must use ${publishedRepositoryUrl} with directory ${dir}`)
+      errors.push(`${label}: release member repository must use ${expectedRepositoryUrl} with directory ${dir}`)
     }
   } else if (manifest.private !== true) {
     errors.push(`${label}: package.json must set "private": true`)

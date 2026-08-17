@@ -21,13 +21,13 @@
 Windows PowerShell 一行安装完整 bundle 到 `web` profile，包括 UI、多智能体团队和插件市场依赖：
 
 ```powershell
-irm https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.ps1 | iex
+irm https://raw.githubusercontent.com/xiaomayisjh/dsh-ant-sword/dev/install-ant-sword.ps1 | iex
 ```
 
 Linux 与 macOS 使用对应的 POSIX 安装入口：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.sh | bash
+curl -fsSL https://raw.githubusercontent.com/xiaomayisjh/dsh-ant-sword/dev/install-ant-sword.sh | bash
 ```
 
 安装完成后直接启动：
@@ -38,28 +38,31 @@ dsh web
 
 安装器会在临时工作区构建可安装 tarball，补齐所有 profile 根依赖，并清除 `dsh plugin add` 为 `agent-teams` 和 `dshmarket` 自动加入的重复 bundle 层。无需手动修改 profile patch 或修复依赖。
 
-### 从 GitHub Release 安装（研究分发，不发 npm）
+### 从本地 release 安装
 
-不走公共 npm registry、改为经 GitHub 仓库自托管分发时，bundle 以 release tarball 资产的形式发布。消费者一行装好——无需克隆、无需构建：
+完整 release 目录包含 bundle、Autograph UI、agent-teams、dshmarket 四个 tarball，以及 `ant-sword-release-manifest.json`。manifest 记录每项资产的文件名、包名、版本和 SHA-256。安装器可接收目录或 manifest 路径；在修改 profile 前，它会拒绝缺失、重复、额外或哈希不匹配的 tarball，并在离线模式下只向 pnpm 传递本地 tarball 路径。
 
-```sh
-# public repository
-dsh plugin --profile <name> add "https://github.com/<owner>/<repo>/releases/download/v<version>/deepseek-ai-dsh-ant-sword-harness-<version>.tgz"
-
-# private repository: set a read-scoped token first
-dsh plugin --profile <name> add "https://github.com/<owner>/<repo>/releases/download/v<version>/deepseek-ai-dsh-ant-sword-harness-<version>.tgz?access_token=$env:GH_TOKEN"
+```powershell
+.\install-ant-sword.ps1 -Release C:\path\to\ant-sword-release
+# 也可直接传 manifest：
+.\install-ant-sword.ps1 -Release C:\path\to\ant-sword-release\ant-sword-release-manifest.json
 ```
 
-`dsh plugin add` 把该 URL 转发给 pnpm，由 pnpm 直接下载并安装 tarball；bundle 的 `dsh.bundle` 声明会让它自动进入该 profile 的层栈。`workspace:^` 依赖在打包时已改写为真实 registry 版本，因此消费端唯一要求是 PATH 上有 pnpm、且能访问 registry 解析 `dependencies`。
-
-**发布一个 release**（需要 `gh` CLI 与写凭据——带 `repo` 作用域的 `GH_TOKEN` PAT，或先 `gh auth login`）：
-
-```sh
-# from packages/bundle/ant-sword-harness
-pnpm run release:github -- --repo <owner>/<repo> [--profile <name>] [--public] [--dry-run]
+```bash
+./install-ant-sword.sh --release /path/to/ant-sword-release
 ```
 
-`--dry-run` 只构建与打包、不上传，并打印将要使用的安装命令。同版本重复执行会替换资产（`--clobber`），幂等。之所以用 release 资产而非 git-tag 依赖，是因为 git spec 会让 pnpm 克隆仓库——既要求消费端持有读凭据，又会触发 pnpm 的 prepare 脚本白名单拦截——而 tarball URL 两者都不需要。
+本地 release 模式需从 checkout 运行，以便引导脚本调用共享的 `install-profile.mjs`；它不下载源码，也不重新构建包。安装仍由 profile 安装器收尾，并要求已有 `dsh`、Node.js 和 pnpm。
+
+### GitHub release 资产
+
+release 命令构建两个 workspace 包，在发布阶段下载两个第三方包的固定版本，写入 manifest，并上传全部五个文件。消费者把这些资产下载到同一目录后，可使用上述本地 release 命令安装，全程不访问 npm registry。
+
+```sh
+pnpm run release:github -- --repo <owner>/<repo> [--profile <name>] [--output <directory>] [--dry-run]
+```
+
+`--output` 指定保留的 release 目录，默认为 `.release/ant-sword-<tag>`。`--dry-run` 仍执行构建、打包、第三方包获取和 manifest 生成，只跳过 GitHub 上传。同一 tag 重复运行会替换同名资产。
 
 ## 兼容性
 

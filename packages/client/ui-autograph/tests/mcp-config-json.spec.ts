@@ -8,14 +8,15 @@ describe('MCP config JSON conversion', () => {
         filesystem: { command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', '.'] },
       },
     }))).toEqual([{
-      serverName: 'filesystem',
-      enabled: true,
-      transport: 'stdio',
-      command: 'npx',
-      args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
-      cwd: '',
-      env: {},
-      toolCallTimeoutMs: 60_000,
+      serverName: 'filesystem', enabled: true, transport: 'stdio', command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', '.'], cwd: '', env: {}, toolCallTimeoutMs: 60_000,
+    }])
+  })
+
+  it('imports root arrays and mcpServers arrays with common name fields', () => {
+    expect(parseMcpJson(JSON.stringify([{ serverName: 'one', command: 'node' }]))[0]?.serverName).toBe('one')
+    expect(parseMcpJson(JSON.stringify({ mcpServers: [{ name: 'two', url: 'https://example.test/mcp' }] }))).toEqual([{
+      serverName: 'two', enabled: true, transport: 'streamable-http', url: 'https://example.test/mcp', headers: {}, toolCallTimeoutMs: 60_000,
     }])
   })
 
@@ -28,18 +29,13 @@ describe('MCP config JSON conversion', () => {
   })
 
   it('round-trips visual configuration through a named catalog', () => {
-    const source = [{
-      serverName: 'remote',
-      enabled: true,
-      transport: 'streamable-http' as const,
-      url: 'https://example.test/mcp',
-      headers: { Authorization: 'Bearer token' },
-      toolCallTimeoutMs: 30_000,
-    }]
+    const source = [{ serverName: 'remote', enabled: true, transport: 'streamable-http' as const, url: 'https://example.test/mcp', headers: { Authorization: 'Bearer token' }, toolCallTimeoutMs: 30_000 }]
     expect(parseMcpJson(formatMcpJson(source))).toEqual(source)
   })
 
-  it('rejects entries without a command or URL', () => {
-    expect(() => parseMcpJson('{"mcpServers":{"broken":{}}}')).toThrow('requires command or url')
+  it('returns actionable syntax and field validation messages', () => {
+    expect(() => parseMcpJson('{ broken')).toThrow(/JSON 解析失败.*不会被覆盖/)
+    expect(() => parseMcpJson('{"mcpServers":{"broken":{}}}')).toThrow(/需要 command.*不会被覆盖/)
+    expect(() => parseMcpJson('{"mcpServers":{"broken":{"command":"x","env":{"A":1}}}}')).toThrow(/env 值必须全部是字符串/)
   })
 })

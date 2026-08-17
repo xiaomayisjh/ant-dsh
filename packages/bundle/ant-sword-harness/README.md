@@ -21,13 +21,13 @@ A security-research profile bundle for DeepSeek Harness. One install composes se
 Windows PowerShell installs the complete bundle into the `web` profile, including the UI, agent teams, and plugin market dependencies:
 
 ```powershell
-irm https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.ps1 | iex
+irm https://raw.githubusercontent.com/xiaomayisjh/dsh-ant-sword/dev/install-ant-sword.ps1 | iex
 ```
 
 Linux and macOS use the equivalent POSIX bootstrap:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.sh | bash
+curl -fsSL https://raw.githubusercontent.com/xiaomayisjh/dsh-ant-sword/dev/install-ant-sword.sh | bash
 ```
 
 Then start it directly:
@@ -38,28 +38,31 @@ dsh web
 
 The installer builds release-ready package tarballs in a temporary workspace, installs all required root dependencies, and removes the duplicate bundle layers that `dsh plugin add` would otherwise create for `agent-teams` and `dshmarket`. No profile patch or dependency repair is required.
 
-### From a GitHub release (research distribution, no npm publish)
+### Install from a local release
 
-For a self-hosted copy distributed through a GitHub repository instead of the public npm registry, the bundle publishes as a release tarball asset. Consumers install it in one line — no clone, no build step:
+A complete release directory contains the bundle, Autograph UI, agent-teams, and dshmarket tarballs plus `ant-sword-release-manifest.json`. The manifest records each filename, package name, version, and SHA-256. The installer accepts either the directory or manifest path, rejects missing, duplicate, extra, or hash-mismatched tarballs before changing the profile, and passes only local tarball paths to pnpm in offline mode.
 
-```sh
-# public repository
-dsh plugin --profile <name> add "https://github.com/<owner>/<repo>/releases/download/v<version>/deepseek-ai-dsh-ant-sword-harness-<version>.tgz"
-
-# private repository: set a read-scoped token first
-dsh plugin --profile <name> add "https://github.com/<owner>/<repo>/releases/download/v<version>/deepseek-ai-dsh-ant-sword-harness-<version>.tgz?access_token=$env:GH_TOKEN"
+```powershell
+.\install-ant-sword.ps1 -Release C:\path\to\ant-sword-release
+# A manifest path is equivalent:
+.\install-ant-sword.ps1 -Release C:\path\to\ant-sword-release\ant-sword-release-manifest.json
 ```
 
-`dsh plugin add` forwards the URL to pnpm, which downloads and installs the tarball directly; the bundle's `dsh.bundle` declaration lands it on the profile's layer stack automatically. The workspace `workspace:^` dependencies are rewritten to real registry versions at pack time, so the only consumer-side requirements are pnpm on PATH and registry access for `dependencies`.
-
-**Publish a release** (requires the `gh` CLI and write credentials — a `GH_TOKEN` PAT with `repo` scope, or `gh auth login`):
-
-```sh
-# from packages/bundle/ant-sword-harness
-pnpm run release:github -- --repo <owner>/<repo> [--profile <name>] [--public] [--dry-run]
+```bash
+./install-ant-sword.sh --release /path/to/ant-sword-release
 ```
 
-`--dry-run` builds and packs without uploading, printing the would-be install command. Re-running the same version replaces the asset (`--clobber`), so it is idempotent. A release asset is used rather than a git-tag dependency because a git spec makes pnpm clone the repo — requiring consumer read credentials and tripping pnpm's prepare-script allowlist — while a tarball URL installs with neither.
+Local release mode runs from a checkout so the bootstrap can call the shared `install-profile.mjs`; it does not download source or rebuild packages. Installation still ends through the profile installer and requires the existing `dsh`, Node.js, and pnpm installation.
+
+### GitHub release assets
+
+The release command builds both workspace packages, downloads pinned copies of the two third-party packages at release time, writes the manifest, and uploads all five files. Consumers can download those assets into one directory and use the local release command without npm registry access.
+
+```sh
+pnpm run release:github -- --repo <owner>/<repo> [--profile <name>] [--output <directory>] [--dry-run]
+```
+
+`--output` selects the retained release directory; it defaults to `.release/ant-sword-<tag>`. `--dry-run` performs the build, pack, third-party acquisition, and manifest generation but skips GitHub upload. Re-running the same tag replaces same-named assets.
 
 ## Compatibility
 

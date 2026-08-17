@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-A security-research profile bundle for DeepSeek Harness. One install composes five capabilities over a profile: a bundled reverse-engineering / CTF skill pack, a self-contained workspace snapshot + `/rewind` capability, a selectable red-team agent preset, multi-agent teams, and the in-app plugin market.
+A security-research profile bundle for DeepSeek Harness. One install composes seven capabilities over a profile: a bundled reverse-engineering / CTF skill pack, a self-contained workspace snapshot + `/rewind` capability, a selectable red-team agent preset, autonomous-mode Web UI, MCP runtime management, multi-agent teams, and the in-app plugin market.
 
 ## Capabilities
 
@@ -11,16 +11,26 @@ A security-research profile bundle for DeepSeek Harness. One install composes fi
 | **Reverse / CTF skill pack** | This package (`skills/`) | 93 reverse-engineering, pentest, and CTF skills registered on `ctx.skills`, invocable through the `skill` tool or by name. |
 | **Workspace snapshot + rewind** | This package (`src/rewind/`) | Captures a snapshot before every mutating tool call; `/rewind` restores files and forks the session back to a checkpoint's turn boundary. |
 | **Red-team agent preset** | This package (`preset/red-team/`) | A selectable agent preset with the standard mode's full capabilities plus a red-team operator persona and the bundled skill pack. |
+| **Autonomous-mode Web UI** | `@deepseek-ai/dsh-client-ui-autograph` | Adds the blackboard tab and runtime/configuration surfaces through the host's `dsh.client` discovery path. The bundle installs and mounts this dependency automatically. |
 | **MCP runtime manager** | This package plus `@deepseek-ai/dsh-mcp-client` | Embedded security and `dsh-mcp-bridge` presets, live enable/disable/add/delete, JSON synchronization, protocol probes, and explicit reloads for stdio, SSE, and Streamable HTTP servers. |
 | **Agent teams** | [`@nanmicoder/dsh-agent-teams`](https://github.com/NanmiCoder/dsh-agent-teams) | Captain-led delegation: durable sub-agents, dependency-aware tasks, mailbox messaging. |
 | **Plugin market** | [`dshmarket`](https://github.com/dsh-market/dsh-market) | Browse, search, and one-click-install community plugins from Settings. |
 
 ## Install
 
-```sh
-dsh plugin --profile <name> add @deepseek-ai/dsh-ant-sword-harness
-dsh --profile <name>
+Windows PowerShell installs the complete bundle into the `web` profile, including the UI, agent teams, and plugin market dependencies:
+
+```powershell
+irm https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.ps1 | iex
 ```
+
+Then start it directly:
+
+```powershell
+dsh web
+```
+
+The installer builds release-ready package tarballs in a temporary workspace, installs all required root dependencies, and removes the duplicate bundle layers that `dsh plugin add` would otherwise create for `agent-teams` and `dshmarket`. No profile patch or dependency repair is required.
 
 ### From a GitHub release (research distribution, no npm publish)
 

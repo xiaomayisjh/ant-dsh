@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-一个面向 DeepSeek Harness 的安全研究 profile bundle。一次安装，在一个 profile 之上组合五种能力：内嵌的逆向 / CTF 技能包、自包含的工作区快照 + `/rewind` 回滚、可选的红队 agent 预设、多智能体协作团队，以及应用内插件市场。
+一个面向 DeepSeek Harness 的安全研究 profile bundle。一次安装，在一个 profile 之上组合七种能力：内嵌的逆向 / CTF 技能包、自包含的工作区快照 + `/rewind` 回滚、可选的红队 agent 预设、自主模式 Web UI、MCP 运行时管理、多智能体协作团队，以及应用内插件市场。
 
 ## 能力
 
@@ -11,16 +11,26 @@
 | **逆向 / CTF 技能包** | 本包（`skills/`） | 在 `ctx.skills` 上注册 93 个逆向工程、渗透测试与 CTF 技能，可经 `skill` 工具或按名调用。 |
 | **工作区快照 + 回滚** | 本包（`src/rewind/`） | 每次变更性工具调用前捕获快照；`/rewind` 恢复文件并把会话 fork 回检查点的轮次边界。 |
 | **红队 agent 预设** | 本包（`preset/red-team/`） | 一个可选的 agent 预设，具备标准模式的全部能力，外加红队操作员人格与内嵌技能包。 |
+| **自主模式 Web UI** | `@deepseek-ai/dsh-client-ui-autograph` | 通过 Host 的 `dsh.client` 发现机制提供黑板选项卡及运行环境/配置界面；bundle 自动安装并挂载该依赖。 |
 | **MCP 运行时管理器** | 本包与 `@deepseek-ai/dsh-mcp-client` | 内嵌安全工具和 `dsh-mcp-bridge` 预设，支持实时启停增删、JSON 同步、协议测活，以及 stdio、SSE、Streamable HTTP 服务器的显式重载。 |
 | **多智能体团队** | [`@nanmicoder/dsh-agent-teams`](https://github.com/NanmiCoder/dsh-agent-teams) | 队长式委派：持久子智能体、依赖感知任务、邮箱消息。 |
 | **插件市场** | [`dshmarket`](https://github.com/dsh-market/dsh-market) | 在设置中浏览、搜索、一键安装社区插件。 |
 
 ## 安装
 
-```sh
-dsh plugin --profile <name> add @deepseek-ai/dsh-ant-sword-harness
-dsh --profile <name>
+Windows PowerShell 一行安装完整 bundle 到 `web` profile，包括 UI、多智能体团队和插件市场依赖：
+
+```powershell
+irm https://raw.githubusercontent.com/xiaomayisjh/ant-dsh/dev/install-ant-sword.ps1 | iex
 ```
+
+安装完成后直接启动：
+
+```powershell
+dsh web
+```
+
+安装器会在临时工作区构建可安装 tarball，补齐所有 profile 根依赖，并清除 `dsh plugin add` 为 `agent-teams` 和 `dshmarket` 自动加入的重复 bundle 层。无需手动修改 profile patch 或修复依赖。
 
 ### 从 GitHub Release 安装（研究分发，不发 npm）
 

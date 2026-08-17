@@ -217,13 +217,11 @@ function pack(destination) {
   return tarball
 }
 
-/** The one-line install command for consumers. */
-function installCommand(repo, tag, tarballName, profile, isPrivate) {
-  const base = `https://github.com/${repo}/releases/download/${tag}/${tarballName}`
-  const url = isPrivate ? `${base}?access_token=$env:GH_TOKEN` : base
-  const profileFlag = profile === undefined ? ' --profile <name>' : ` --profile ${profile}`
-  const authNote = isPrivate ? '  # private repo: set $env:GH_TOKEN to a read PAT first' : ''
-  return `dsh plugin${profileFlag} add "${url}"${authNote}`
+/** The one-line complete-profile installer for consumers. */
+function installCommand(repo, profile) {
+  const bootstrap = `https://raw.githubusercontent.com/${repo}/dev/install-ant-sword.ps1`
+  if (profile === undefined || profile === 'web') return `irm "${bootstrap}" | iex`
+  return `& ([scriptblock]::Create((irm "${bootstrap}"))) -Profile "${profile}"`
 }
 
 async function main() {
@@ -260,7 +258,7 @@ async function main() {
 
     if (values['dry-run']) {
       console.log(`release: dry-run — would release ${values.repo} @ ${tag} with ${tarballName}`)
-      console.log(`release: install with: ${installCommand(values.repo, tag, tarballName, values.profile, isPrivate)}`)
+      console.log(`release: install with: ${installCommand(values.repo, values.profile)}`)
       return
     }
 
@@ -280,11 +278,9 @@ async function main() {
     const asset = await uploadAsset(token, release, tarball)
     console.log(`release: uploaded ${asset.name} (${asset.size} bytes)`)
 
-    // Read back repo visibility so the printed command matches reality.
-    const repoInfo = await api(token, 'GET', `/repos/${values.repo}`)
     console.log('')
     console.log('Install with one line:')
-    console.log(`  ${installCommand(values.repo, tag, tarballName, values.profile, repoInfo.private)}`)
+    console.log(`  ${installCommand(values.repo, values.profile)}`)
   } finally {
     rmSync(destination, { recursive: true, force: true })
   }
